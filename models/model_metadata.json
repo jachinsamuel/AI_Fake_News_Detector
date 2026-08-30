@@ -1,0 +1,45 @@
+{
+    "best_model_name": "Linear SVM",
+    "best_metrics": {
+        "Model": "Linear SVM",
+        "Accuracy": 0.9366,
+        "Precision": 0.9366,
+        "Recall": 0.9366,
+        "F1 Score": 0.9366,
+        "F1 (Macro)": 0.9366
+    },
+    "classes": [
+        "FAKE",
+        "REAL"
+    ],
+    "features_count": 25000,
+    "training_samples": 5044,
+    "testing_samples": 1261,
+    "all_metrics": [
+        {
+            "Model": "Naive Bayes",
+            "Accuracy": 0.9033,
+            "Precision": 0.9037,
+            "Recall": 0.9033,
+            "F1 Score": 0.9032,
+            "F1 (Macro)": 0.9032
+        },
+        {
+            "Model": "Logistic Regression",
+            "Accuracy": 0.9334,
+            "Precision": 0.9334,
+            "Recall": 0.9334,
+            "F1 Score": 0.9334,
+            "F1 (Macro)": 0.9334
+        },
+        {
+            "Model": "Linear SVM",
+            "Accuracy": 0.9366,
+            "Precision": 0.9366,
+            "Recall": 0.9366,
+            "F1 Score": 0.9366,
+            "F1 (Macro)": 0.9366
+        }
+    ],
+    "trained_at": "2026-08-30 12:22:49"
+}
