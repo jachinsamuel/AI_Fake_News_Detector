@@ -110,7 +110,7 @@ class TestFlaskAPI(unittest.TestCase):
     def test_index_route(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"News Authenticity Analyzer", response.data)
+        self.assertIn(b"Fake News Detector", response.data)
 
     def test_health_route(self):
         response = self.client.get("/api/health")

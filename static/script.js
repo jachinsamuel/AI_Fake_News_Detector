@@ -1,5 +1,5 @@
 /**
- * News Authenticity Analyzer — Client Controller
+ * Minimalist Fake News Detector Controller
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const newsInput = document.getElementById("news-input");
     const wordCountSpan = document.getElementById("word-count");
     const charCountSpan = document.getElementById("char-count");
-    const readingTimeSpan = document.getElementById("reading-time");
     
     // Actions & Buttons
     const analyzeBtn = document.getElementById("analyze-btn");
@@ -19,29 +18,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Results Elements
     const resultCard = document.getElementById("result-card");
-    const resultBox = resultCard.querySelector(".result-box");
     const verdictTag = document.getElementById("verdict-tag");
-    const verdictHeading = document.getElementById("verdict-heading");
     const confidenceVal = document.getElementById("confidence-val");
     const confidenceBar = document.getElementById("confidence-bar");
     const featureTagsContainer = document.getElementById("feature-tags-container");
     const explanationText = document.getElementById("explanation-text");
-    const statModel = document.getElementById("stat-model");
-    const statLatency = document.getElementById("stat-latency");
-    const statTokens = document.getElementById("stat-tokens");
-
-    let sampleArticles = [];
 
     // 1. Text Counter
     function updateTextStats() {
         const text = newsInput.value.trim();
         const chars = text.length;
         const words = text ? text.split(/\s+/).filter(w => w.length > 0).length : 0;
-        const readMins = Math.max(1, Math.ceil(words / 200));
 
         charCountSpan.textContent = `${chars.toLocaleString()} characters`;
         wordCountSpan.textContent = `${words.toLocaleString()} words`;
-        readingTimeSpan.textContent = words > 0 ? `~${readMins} min read` : "0 min read";
     }
 
     newsInput.addEventListener("input", () => {
@@ -49,42 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
         hideError();
     });
 
-    // 2. Fetch Sample Articles
-    async function loadSamples() {
-        try {
-            const res = await fetch("/api/examples");
-            const data = await res.json();
-            if (data.status === "success" && data.examples) {
-                sampleArticles = data.examples;
-                bindSampleButtons();
-            }
-        } catch (err) {
-            console.warn("Could not load online samples", err);
-        }
-    }
-
-    function bindSampleButtons() {
-        const buttons = document.querySelectorAll(".sample-pill");
-        buttons.forEach(btn => {
-            btn.addEventListener("click", () => {
-                const idx = parseInt(btn.getAttribute("data-index"), 10);
-                if (sampleArticles[idx]) {
-                    const sample = sampleArticles[idx];
-                    newsInput.value = `${sample.title}\n\n${sample.text}`;
-                    updateTextStats();
-                    hideError();
-                    newsInput.focus();
-                    
-                    document.querySelector(".editor-section").scrollIntoView({
-                        behavior: "smooth",
-                        block: "center"
-                    });
-                }
-            });
-        });
-    }
-
-    // 3. Clear Button
+    // 2. Clear Button
     clearBtn.addEventListener("click", () => {
         newsInput.value = "";
         updateTextStats();
@@ -93,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
         newsInput.focus();
     });
 
-    // 4. Keyboard Shortcut: Ctrl + Enter
+    // 3. Keyboard Shortcut: Ctrl + Enter
     newsInput.addEventListener("keydown", (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
             e.preventDefault();
@@ -101,19 +56,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 5. Analyze Action
+    // 4. Analyze Action
     analyzeBtn.addEventListener("click", analyzeText);
 
     async function analyzeText() {
         const text = newsInput.value.trim();
         if (!text) {
-            showError("Please enter or paste news article text before analyzing.");
+            showError("Please enter or paste a news article before analyzing.");
             return;
         }
 
         const words = text.split(/\s+/).filter(w => w.length > 0).length;
         if (words < 3 && text.length < 15) {
-            showError("Input is too short. Please provide at least 3 words or a headline for reliable analysis.");
+            showError("Input text is too short. Please provide at least 3 words or a headline.");
             return;
         }
 
@@ -139,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             displayResult(data);
         } catch (err) {
-            showError("Could not reach the analysis server. Please check that Flask is running.");
+            showError("Could not reach the analysis server. Ensure Flask backend is running.");
         } finally {
             setLoading(false);
         }
@@ -148,18 +103,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function displayResult(data) {
         const isReal = data.prediction.toUpperCase() === "REAL";
 
-        // Toggle real / fake classes
-        resultBox.classList.remove("is-real", "is-fake");
-        resultBox.classList.add(isReal ? "is-real" : "is-fake");
+        // Set state class
+        resultCard.classList.remove("is-real", "is-fake");
+        resultCard.classList.add(isReal ? "is-real" : "is-fake");
 
         // Verdict labels
-        if (isReal) {
-            verdictTag.textContent = "LIKELY AUTHENTIC";
-            verdictHeading.textContent = "Text matches patterns of authentic reporting";
-        } else {
-            verdictTag.textContent = "LIKELY MISINFORMATION";
-            verdictHeading.textContent = "Text matches patterns commonly seen in fake news";
-        }
+        verdictTag.textContent = isReal ? "✓ REAL NEWS" : "⚠ FAKE NEWS";
 
         // Confidence
         const confPct = Math.round(data.confidence * 10) / 10;
@@ -170,36 +119,32 @@ document.addEventListener("DOMContentLoaded", () => {
             confidenceBar.style.width = `${confPct}%`;
         }, 50);
 
-        // Tags Matrix
+        // Tags List
         featureTagsContainer.innerHTML = "";
         const details = data.feature_details || [];
         if (details.length > 0) {
             details.forEach(item => {
-                const chip = document.createElement("span");
+                const tag = document.createElement("span");
                 const dirClass = item.direction ? item.direction.toLowerCase() : (isReal ? 'real' : 'fake');
-                chip.className = `word-chip ${dirClass}`;
-                chip.textContent = item.word;
-                chip.title = `Weight: ${item.score || 'N/A'}`;
-                featureTagsContainer.appendChild(chip);
+                tag.className = `word-tag ${dirClass}`;
+                tag.textContent = item.word;
+                featureTagsContainer.appendChild(tag);
             });
         } else if (data.important_features && data.important_features.length > 0) {
             data.important_features.forEach(word => {
-                const chip = document.createElement("span");
-                chip.className = `word-chip ${isReal ? 'real' : 'fake'}`;
-                chip.textContent = word;
-                featureTagsContainer.appendChild(chip);
+                const tag = document.createElement("span");
+                tag.className = `word-tag ${isReal ? 'real' : 'fake'}`;
+                tag.textContent = word;
+                featureTagsContainer.appendChild(tag);
             });
         } else {
-            featureTagsContainer.innerHTML = '<span class="word-chip">Standard vocabulary</span>';
+            featureTagsContainer.innerHTML = '<span class="word-tag">General vocabulary</span>';
         }
 
-        // Explanation & Metadata
+        // Explanation text
         explanationText.textContent = data.explanation;
-        statModel.textContent = `Model: ${data.model || "Linear SVM"}`;
-        statLatency.textContent = `Latency: ${data.processing_time_ms}ms`;
-        statTokens.textContent = `Tokens: ${data.stats ? data.stats.cleaned_tokens_count : 0}`;
 
-        // Unhide result
+        // Reveal card
         resultCard.classList.remove("hidden");
         resultCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
@@ -211,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
             analyzeBtn.disabled = true;
         } else {
             spinner.classList.add("hidden");
-            btnText.textContent = "Analyze Article";
+            btnText.textContent = "Analyze News";
             analyzeBtn.disabled = false;
         }
     }
@@ -225,7 +170,4 @@ document.addEventListener("DOMContentLoaded", () => {
     function hideError() {
         errorBanner.classList.add("hidden");
     }
-
-    // Initialize
-    loadSamples();
 });
