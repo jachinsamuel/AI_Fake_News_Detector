@@ -2,7 +2,7 @@
 Inference & Prediction Pipeline.
 Loads saved model artifacts, executes preprocessing, generates predictions,
 calculates calibrated confidence scores, extracts explainable linguistic features,
-and runs AI live web verification against credible real-world news sources.
+and synthesizes Hybrid AI Live Web Verification with real-world news sources.
 """
 
 import os
@@ -71,7 +71,7 @@ class FakeNewsPredictor:
     def predict(self, raw_text: str, check_web: bool = True) -> dict:
         """
         Execute full inference pipeline for a given raw text.
-        Optionally verifies claims on live web & fact checking APIs.
+        Synthesizes offline NLP model decision with live real-world web verification.
         """
         t0 = time.time()
         
@@ -94,7 +94,7 @@ class FakeNewsPredictor:
         # 2. TF-IDF Transformation
         tfidf_features = self.vectorizer.transform([clean_text])
         
-        # 3. Model Prediction
+        # 3. Offline Model Prediction
         pred_encoded = self.model.predict(tfidf_features)[0]
         predicted_label = self.label_encoder.inverse_transform([pred_encoded])[0]
         
@@ -122,11 +122,43 @@ class FakeNewsPredictor:
             top_n=8
         )
         
-        # 6. Live AI Web Verification
+        # 6. Live AI Web Verification & Hybrid Decision Synthesis
         web_info = None
+        final_prediction = predicted_label
+        final_confidence = confidence_pct
+        final_explanation = xai_info["explanation"]
+
         if check_web:
             try:
                 web_info = verify_article_on_web(raw_text_stripped)
+                if web_info and web_info.get("status") == "SUCCESS":
+                    # Case 1: Debunked by independent fact-checkers (Snopes/PolitiFact/Reuters)
+                    if web_info.get("is_debunked"):
+                        final_prediction = "FAKE"
+                        final_confidence = round(max(confidence_pct, 94.5), 2)
+                        publisher = web_info["fact_checks"][0]["publisher"]
+                        rating = web_info["fact_checks"][0]["rating"]
+                        final_explanation = f"Flagged and debunked by independent fact-checkers ({publisher}) with verified rating: '{rating}'."
+
+                    # Case 2: Corroborated by live credible news organizations (e.g. Bloomberg, NYT, BBC, Reuters, DW)
+                    elif web_info.get("credible_sources_count", 0) >= 1 or web_info.get("web_verdict") == "CORROBORATED_BY_LIVE_NEWS":
+                        final_prediction = "REAL"
+                        # Synthesize strong confidence
+                        final_confidence = round(min(97.5, max(confidence_pct + 42.0, 93.8)), 2)
+                        lead_source = web_info["live_sources"][0]["source"] if web_info.get("live_sources") else "Verified News Wires"
+                        final_explanation = f"Corroborated by live news coverage across {len(web_info.get('live_sources', []))} major news sources including {lead_source}."
+
+                    # Case 3: Multiple matching live articles found
+                    elif web_info.get("sources_count", 0) >= 2:
+                        final_prediction = "REAL"
+                        final_confidence = round(min(94.0, max(confidence_pct + 32.0, 88.5)), 2)
+                        final_explanation = f"Corroborating reporting found across {web_info['sources_count']} active web news articles."
+
+                    # Case 4: No live web reporting found for a short query (heuristic for unverified claims)
+                    elif word_count <= 25 and web_info.get("sources_count", 0) == 0 and not web_info.get("fact_checks"):
+                        if predicted_label == "REAL" and confidence_pct < 65:
+                            final_confidence = round(confidence_pct, 2)
+                            final_explanation = "Statistical text pattern matches real news syntax, but no active real-time news coverage was found on the live web."
             except Exception as e:
                 web_info = {
                     "status": "ERROR",
@@ -138,13 +170,13 @@ class FakeNewsPredictor:
         elapsed_ms = round((time.time() - t0) * 1000, 2)
         
         return {
-            "prediction": predicted_label,
-            "confidence": confidence_pct,
-            "confidence_decimal": round(confidence, 4),
+            "prediction": final_prediction,
+            "confidence": final_confidence,
+            "confidence_decimal": round(final_confidence / 100.0, 4),
             "model_used": self.model_title,
             "important_features": xai_info["important_features"],
             "feature_details": xai_info["feature_details"],
-            "explanation": xai_info["explanation"],
+            "explanation": final_explanation,
             "disclaimer": xai_info["disclaimer"],
             "web_verification": web_info,
             "stats": {
@@ -170,18 +202,18 @@ def get_predictor():
 if __name__ == "__main__":
     predictor = get_predictor()
     
-    test_articles = [
-        "NASA James Webb Space Telescope discovers ancient distant galaxy formed after Big Bang.",
-        "Underground doctors leak secret miracle herb that cures all diseases in 48 hours."
+    test_queries = [
+        "Narendra Modi is the prime minister of india",
+        "BREAKING: Secret miracle herb cures all cancer in 48 hours leaked by doctors",
+        "NASA James Webb Space Telescope discovers ancient galaxy at cosmic dawn"
     ]
     
-    for article in test_articles:
-        res = predictor.predict(article, check_web=True)
-        print("\n" + "=" * 50)
-        print(f"Article: {article}")
-        print(f"Prediction: {res['prediction']} ({res['confidence']}%) | Model: {res['model_used']}")
-        print(f"Important Terms: {res['important_features']}")
-        if res.get("web_verification"):
-            print(f"Web Verdict: {res['web_verification'].get('web_verdict')}")
-            print(f"Web Summary: {res['web_verification'].get('web_summary')}")
-            print(f"Live Sources Found: {len(res['web_verification'].get('live_sources', []))}")
+    for query in test_queries:
+        res = predictor.predict(query, check_web=True)
+        print("\n" + "=" * 55)
+        print(f"Query: {query}")
+        print(f"Verdict: {res['prediction']} ({res['confidence']}%) | Model: {res['model_used']}")
+        print(f"Explanation: {res['explanation']}")
+        web = res.get("web_verification", {})
+        print(f"Web Verdict: {web.get('web_verdict')}")
+        print(f"Live Sources: {len(web.get('live_sources', []))}")
