@@ -1,5 +1,5 @@
 /**
- * Minimalist Fake News Detector Controller
+ * Fake News Detector Controller with Live Web Verification
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const newsInput = document.getElementById("news-input");
     const wordCountSpan = document.getElementById("word-count");
     const charCountSpan = document.getElementById("char-count");
+    const checkWebToggle = document.getElementById("check-web-toggle");
     
     // Actions & Buttons
     const analyzeBtn = document.getElementById("analyze-btn");
@@ -23,6 +24,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const confidenceBar = document.getElementById("confidence-bar");
     const featureTagsContainer = document.getElementById("feature-tags-container");
     const explanationText = document.getElementById("explanation-text");
+
+    // Live Web Verification Elements
+    const webVerificationBox = document.getElementById("web-verification-box");
+    const webVerdictBadge = document.getElementById("web-verdict-badge");
+    const webSummaryText = document.getElementById("web-summary-text");
+    const sourcesContainer = document.getElementById("sources-container");
+    const sourcesList = document.getElementById("sources-list");
+    const factChecksContainer = document.getElementById("fact-checks-container");
+    const factChecksList = document.getElementById("fact-checks-list");
 
     // 1. Text Counter
     function updateTextStats() {
@@ -75,13 +85,18 @@ document.addEventListener("DOMContentLoaded", () => {
         hideError();
         setLoading(true);
 
+        const checkWeb = checkWebToggle ? checkWebToggle.checked : true;
+
         try {
             const response = await fetch("/predict", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ text: text })
+                body: JSON.stringify({ 
+                    text: text,
+                    check_web: checkWeb
+                })
             });
 
             const data = await response.json();
@@ -143,6 +158,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Explanation text
         explanationText.textContent = data.explanation;
+
+        // Render Live Web Verification & Sources
+        const web = data.web_verification;
+        if (web && web.status === "SUCCESS") {
+            webVerificationBox.classList.remove("hidden");
+            webSummaryText.textContent = web.web_summary || "Live web analysis completed.";
+
+            // Set web verdict badge
+            webVerdictBadge.className = "web-status-badge";
+            if (web.is_debunked) {
+                webVerdictBadge.textContent = "Debunked by Fact-Checkers";
+                webVerdictBadge.classList.add("debunked");
+            } else if (web.web_verdict === "CORROBORATED_BY_LIVE_NEWS") {
+                webVerdictBadge.textContent = "Corroborated by News Outlets";
+                webVerdictBadge.classList.add("corroborated");
+            } else if (web.sources_count > 0) {
+                webVerdictBadge.textContent = `${web.sources_count} Live Articles Found`;
+                webVerdictBadge.classList.add("corroborated");
+            } else {
+                webVerdictBadge.textContent = "No Live Matches";
+            }
+
+            // Live News Sources
+            sourcesList.innerHTML = "";
+            const sources = web.live_sources || [];
+            if (sources.length > 0) {
+                sourcesContainer.classList.remove("hidden");
+                sources.forEach(s => {
+                    const a = document.createElement("a");
+                    a.href = s.url || "#";
+                    a.target = "_blank";
+                    a.rel = "noopener noreferrer";
+                    a.className = "source-item";
+                    a.innerHTML = `
+                        <span class="source-title" title="${s.title}">${s.title}</span>
+                        <span class="source-meta">${s.source} ${s.published_at ? '• ' + s.published_at : ''}</span>
+                    `;
+                    sourcesList.appendChild(a);
+                });
+            } else {
+                sourcesContainer.classList.add("hidden");
+            }
+
+            // Fact Check Reviews
+            factChecksList.innerHTML = "";
+            const checks = web.fact_checks || [];
+            if (checks.length > 0) {
+                factChecksContainer.classList.remove("hidden");
+                checks.forEach(fc => {
+                    const a = document.createElement("a");
+                    a.href = fc.url || "#";
+                    a.target = "_blank";
+                    a.rel = "noopener noreferrer";
+                    a.className = "fact-check-item";
+                    a.innerHTML = `
+                        <span><strong>${fc.publisher}:</strong> ${fc.claim}</span>
+                        <span style="font-weight:700;">Rating: ${fc.rating}</span>
+                    `;
+                    factChecksList.appendChild(a);
+                });
+            } else {
+                factChecksContainer.classList.add("hidden");
+            }
+
+        } else {
+            webVerificationBox.classList.add("hidden");
+        }
 
         // Reveal card
         resultCard.classList.remove("hidden");

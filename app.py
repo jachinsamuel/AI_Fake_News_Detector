@@ -1,6 +1,6 @@
 """
 Flask REST API and Web Server for AI Fake News Detector.
-Provides interactive UI rendering and RESTful prediction endpoints.
+Provides interactive UI rendering and RESTful prediction endpoints with Live Web Verification.
 """
 
 import os
@@ -15,6 +15,7 @@ if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
 from src.predict import get_predictor
+from src.config import get_available_api_services
 
 app = Flask(__name__)
 CORS(app)
@@ -26,7 +27,7 @@ except Exception as e:
     print(f"[WARNING] Could not load predictor at initialization: {e}")
     predictor = None
 
-# Sample news articles for interactive testing
+# Sample news articles for testing
 SAMPLE_ARTICLES = [
     {
         "id": "real_science",
@@ -68,8 +69,8 @@ def index():
 @app.route("/predict", methods=["POST"])
 def predict():
     """
-    Main prediction endpoint.
-    Accepts JSON: {"text": "news text"} or form-data text.
+    Main prediction endpoint with Live Web Verification.
+    Accepts JSON: {"text": "news text", "check_web": true}
     """
     global predictor
     if predictor is None:
@@ -83,11 +84,14 @@ def predict():
 
     # Parse input data
     input_text = ""
+    check_web = True
     if request.is_json:
         data = request.get_json(silent=True) or {}
         input_text = data.get("text", "")
+        check_web = data.get("check_web", True)
     elif request.form:
         input_text = request.form.get("text", "")
+        check_web = request.form.get("check_web", "true").lower() in ("true", "1", "yes")
     else:
         raw_body = request.get_data(as_text=True)
         if raw_body:
@@ -108,7 +112,7 @@ def predict():
         }), 400
 
     try:
-        result = predictor.predict(cleaned_input)
+        result = predictor.predict(cleaned_input, check_web=check_web)
         return jsonify({
             "status": "success",
             "prediction": result["prediction"],
@@ -119,6 +123,7 @@ def predict():
             "feature_details": result["feature_details"],
             "explanation": result["explanation"],
             "disclaimer": result["disclaimer"],
+            "web_verification": result.get("web_verification"),
             "stats": result["stats"],
             "processing_time_ms": result["processing_time_ms"]
         }), 200
@@ -147,10 +152,20 @@ def get_metrics():
 
 @app.route("/api/examples", methods=["GET"])
 def get_examples():
-    """Return curated benchmark news articles for 1-click testing."""
+    """Return sample news articles for testing."""
     return jsonify({
         "status": "success",
         "examples": SAMPLE_ARTICLES
+    }), 200
+
+
+@app.route("/api/config", methods=["GET"])
+def get_config():
+    """Return active API services and configuration info."""
+    return jsonify({
+        "status": "online",
+        "active_api_services": get_available_api_services(),
+        "live_web_verification": True
     }), 200
 
 
@@ -160,15 +175,15 @@ def health_check():
     return jsonify({
         "status": "online",
         "predictor_ready": predictor is not None,
-        "service": "AI Fake News Detection System",
-        "version": "1.0.0"
+        "service": "AI Fake News Detection System with Live Web Verification",
+        "version": "2.0.0"
     }), 200
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"\n=======================================================")
-    print(f" [STARTING] AI Fake News Detector Server")
+    print(f" [STARTING] AI Fake News Detector with Live Web Verifier")
     print(f" Access URL: http://127.0.0.1:{port}")
     print(f"=======================================================\n")
     app.run(host="127.0.0.1", port=port, debug=False)

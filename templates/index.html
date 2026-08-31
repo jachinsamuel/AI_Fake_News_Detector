@@ -7,7 +7,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -27,7 +27,7 @@
             <!-- Headline -->
             <section class="intro">
                 <h1>Analyze News Authenticity</h1>
-                <p>Paste a news headline or complete article below to predict whether it is real or fake.</p>
+                <p>Paste a news headline or complete article below to predict authenticity using machine learning and live web verification.</p>
             </section>
 
             <!-- Input Card -->
@@ -48,7 +48,12 @@
                 ></textarea>
 
                 <div class="card-footer">
-                    <span class="hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to analyze</span>
+                    <div class="footer-left">
+                        <label class="toggle-label" title="Search live web sources and Google Fact Check database">
+                            <input type="checkbox" id="check-web-toggle" checked>
+                            <span>Verify with Live Web &amp; Fact-Checkers</span>
+                        </label>
+                    </div>
                     <div class="actions">
                         <button type="button" id="clear-btn" class="btn-secondary">Clear</button>
                         <button type="button" id="analyze-btn" class="btn-primary">
@@ -92,6 +97,31 @@
                 <!-- Explanation -->
                 <div class="explanation-box">
                     <p id="explanation-text"></p>
+                </div>
+
+                <!-- Live Web Verification & Sources Section -->
+                <div class="web-verification-section hidden" id="web-verification-box">
+                    <div class="web-header">
+                        <span class="section-subtitle">Live Web &amp; Fact-Checking Evidence:</span>
+                        <span class="web-status-badge" id="web-verdict-badge">Corroborated</span>
+                    </div>
+                    <p class="web-summary-text" id="web-summary-text"></p>
+                    
+                    <!-- Live Sources Citations -->
+                    <div class="sources-container hidden" id="sources-container">
+                        <span class="sources-label">Live Source Citations:</span>
+                        <div class="sources-list" id="sources-list">
+                            <!-- Filled dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Fact Checks Found -->
+                    <div class="fact-checks-container hidden" id="fact-checks-container">
+                        <span class="sources-label">Independent Fact-Checks:</span>
+                        <div class="fact-checks-list" id="fact-checks-list">
+                            <!-- Filled dynamically -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>

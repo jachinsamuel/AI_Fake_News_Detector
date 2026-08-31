@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Clean & Minimalist Fake News Detector Styles
+   Clean & Minimalist Fake News Detector Styles with Live Web Verification
    ========================================================================== */
 
 :root {
@@ -46,7 +46,7 @@ body {
 }
 
 .site-wrapper {
-    max-width: 820px;
+    max-width: 840px;
     margin: 0 auto;
     padding: 0 20px 60px;
 }
@@ -64,41 +64,11 @@ body {
     align-items: center;
 }
 
-.brand {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-}
-
 .brand-name {
     font-weight: 800;
     font-size: 1.15rem;
     color: var(--text-main);
     letter-spacing: -0.02em;
-}
-
-.brand-tag {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-}
-
-.model-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background-color: #F1F5F9;
-    padding: 4px 10px;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-family: var(--font-mono);
-    color: var(--text-muted);
-}
-
-.dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: #22C55E;
 }
 
 /* Main Content */
@@ -117,40 +87,6 @@ body {
 .intro p {
     color: var(--text-muted);
     font-size: 0.95rem;
-}
-
-/* Sample Buttons */
-.sample-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 20px;
-}
-
-.sample-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-light);
-    margin-right: 4px;
-}
-
-.sample-btn {
-    background-color: #FFFFFF;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 5px 12px;
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.sample-btn:hover {
-    border-color: #CBD5E1;
-    color: var(--text-main);
-    background-color: #F8FAFC;
 }
 
 /* Cards */
@@ -218,20 +154,26 @@ textarea::placeholder {
     justify-content: space-between;
     align-items: center;
     margin-top: 14px;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-.hint {
-    font-size: 0.75rem;
-    color: var(--text-light);
+.toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
 }
 
-.hint kbd {
-    background-color: #F1F5F9;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 2px 5px;
-    font-size: 0.7rem;
-    font-family: var(--font-mono);
+.toggle-label input[type="checkbox"] {
+    accent-color: #0F172A;
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
 }
 
 .actions {
@@ -303,7 +245,7 @@ textarea::placeholder {
 
 /* Result Card */
 .result-card {
-    padding: 22px;
+    padding: 24px;
     margin-bottom: 32px;
     animation: fadeIn 0.25s ease-out;
 }
@@ -345,12 +287,6 @@ textarea::placeholder {
     background-color: var(--fake-bg);
     color: var(--fake-text);
     border: 1px solid var(--fake-border);
-}
-
-.verdict-model {
-    font-size: 0.78rem;
-    font-family: var(--font-mono);
-    color: var(--text-light);
 }
 
 .confidence-block {
@@ -403,9 +339,9 @@ textarea::placeholder {
 
 .section-subtitle {
     display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-main);
     margin-bottom: 8px;
 }
 
@@ -446,15 +382,122 @@ textarea::placeholder {
     font-size: 0.86rem;
     color: var(--text-muted);
     line-height: 1.5;
+    margin-bottom: 20px;
 }
 
-/* Footer */
-.app-footer {
-    text-align: center;
+/* Live Web Verification Box */
+.web-verification-section {
     border-top: 1px solid var(--border-color);
-    padding-top: 24px;
-    font-size: 0.8rem;
+    padding-top: 18px;
+    margin-top: 20px;
+}
+
+.web-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.web-status-badge {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: #F1F5F9;
+    color: var(--text-muted);
+}
+
+.web-status-badge.corroborated {
+    background-color: var(--real-bg);
+    color: var(--real-text);
+}
+
+.web-status-badge.debunked {
+    background-color: var(--fake-bg);
+    color: var(--fake-text);
+}
+
+.web-summary-text {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.sources-container, .fact-checks-container {
+    margin-top: 10px;
+}
+
+.sources-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
     color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}
+
+.sources-list, .fact-checks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.source-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #F8FAFC;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: all 0.15s ease;
+}
+
+.source-item:hover {
+    border-color: #94A3B8;
+    background-color: #FFFFFF;
+}
+
+.source-title {
+    font-weight: 600;
+    color: #1E293B;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 75%;
+}
+
+.source-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.fact-check-item {
+    background-color: #FEF2F2;
+    border: 1px solid #FECDD3;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-decoration: none;
+    color: #991B1B;
+}
+
+.fact-check-item:hover {
+    background-color: #FEE2E2;
 }
 
 .hidden {
@@ -475,5 +518,15 @@ textarea::placeholder {
     }
     .confidence-block {
         text-align: left;
+    }
+    .card-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .actions {
+        justify-content: flex-end;
+    }
+    .source-title {
+        max-width: 60%;
     }
 }

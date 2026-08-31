@@ -169,6 +169,34 @@ class TestFlaskAPI(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_config_route(self):
+        response = self.client.get("/api/config")
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data["status"], "online")
+        self.assertIn("active_api_services", data)
+
+
+class TestWebVerifier(unittest.TestCase):
+    """Test AI Live Web Verification agent."""
+
+    def test_query_extraction(self):
+        from src.web_verifier import extract_search_query
+        sample = "WASHINGTON (Reuters) - NASA launches new Mars explorer mission to search for water."
+        query = extract_search_query(sample)
+        self.assertIsInstance(query, str)
+        self.assertGreater(len(query), 5)
+        self.assertNotIn("WASHINGTON", query)
+
+    def test_verify_article_structure(self):
+        from src.web_verifier import verify_article_on_web
+        sample = "NASA James Webb Space Telescope discovers distant galaxies in deep space."
+        res = verify_article_on_web(sample)
+        self.assertIn("status", res)
+        self.assertIn("web_verdict", res)
+        self.assertIn("live_sources", res)
+        self.assertIn("web_summary", res)
+
 
 if __name__ == "__main__":
     unittest.main()

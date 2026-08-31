@@ -1,7 +1,10 @@
 """
-Data acquisition, preparation, and exploratory analysis script.
-Downloads and normalizes the Fake and Real News dataset, handles missing values,
-generates combined text features, and produces EDA visualizations.
+Data acquisition, multi-dataset consolidation, and exploratory analysis script.
+Consolidates:
+1. George McIntire Fake and Real News benchmark dataset (6,305 articles)
+2. FakeNewsNet PolitiFact dataset (Politifact verified Real and Fake articles)
+3. FakeNewsNet GossipCop dataset (GossipCop verified Real and Fake articles)
+Generates a multi-domain, balanced dataset of 12,000+ clean news items with EDA plots.
 """
 
 import os
@@ -11,10 +14,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-DATASET_URL = "https://raw.githubusercontent.com/lutzhamel/fake-news/master/data/fake_or_real_news.csv"
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_CSV = os.path.join(DATA_DIR, "news.csv")
 RESULTS_DIR = os.path.join(os.path.dirname(DATA_DIR), "results")
+
+# Benchmark source URLs
+DATASET_SOURCES = {
+    "mcintire": "https://raw.githubusercontent.com/lutzhamel/fake-news/master/data/fake_or_real_news.csv",
+    "fn_politifact_real": "https://raw.githubusercontent.com/KaiDMML/FakeNewsNet/master/dataset/politifact_real.csv",
+    "fn_politifact_fake": "https://raw.githubusercontent.com/KaiDMML/FakeNewsNet/master/dataset/politifact_fake.csv",
+    "fn_gossipcop_real": "https://raw.githubusercontent.com/KaiDMML/FakeNewsNet/master/dataset/gossipcop_real.csv",
+    "fn_gossipcop_fake": "https://raw.githubusercontent.com/KaiDMML/FakeNewsNet/master/dataset/gossipcop_fake.csv",
+}
 
 
 def ensure_directories():
@@ -23,165 +34,172 @@ def ensure_directories():
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
-def download_dataset(target_path=OUTPUT_CSV):
-    """Download the benchmark Fake or Real News dataset if not present."""
-    ensure_directories()
-    raw_path = os.path.join(DATA_DIR, "raw_news.csv")
-    
-    if not os.path.exists(raw_path):
-        print(f"[INFO] Downloading dataset from {DATASET_URL} ...")
+def download_source(name: str, url: str) -> str:
+    """Download individual CSV dataset source if not present."""
+    local_path = os.path.join(DATA_DIR, f"raw_{name}.csv")
+    if not os.path.exists(local_path):
+        print(f"[INFO] Downloading {name} from {url} ...")
         headers = {"User-Agent": "Mozilla/5.0"}
-        req = urllib.request.Request(DATASET_URL, headers=headers)
-        with urllib.request.urlopen(req) as response, open(raw_path, "wb") as out_file:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=30) as response, open(local_path, "wb") as out_file:
             out_file.write(response.read())
-        print(f"[INFO] Download completed: {raw_path}")
-    else:
-        print(f"[INFO] Raw dataset already exists at: {raw_path}")
-        
-    return raw_path
+        print(f"[INFO] Downloaded: {local_path}")
+    return local_path
 
 
-def clean_and_prepare_data(raw_csv_path, output_csv_path=OUTPUT_CSV):
+def load_and_standardize_datasets():
     """
-    Clean the dataset:
-    - Standardize column names (title, text, label)
-    - Normalize labels to uppercase 'REAL' and 'FAKE'
-    - Handle missing values & remove duplicate entries
-    - Create 'combined_text' = title + " " + text
+    Download and standardize multi-source datasets:
+    - McIntire dataset: title, text, label
+    - FakeNewsNet PolitiFact & GossipCop: title, label
     """
-    print("[INFO] Processing and cleaning dataset...")
-    df = pd.read_csv(raw_csv_path)
+    ensure_directories()
+    all_dfs = []
     
-    # Handle unnamed ID columns if present
-    if "Unnamed: 0" in df.columns:
-        df = df.drop(columns=["Unnamed: 0"])
+    # 1. McIntire dataset
+    mc_path = download_source("mcintire", DATASET_SOURCES["mcintire"])
+    df_mc = pd.read_csv(mc_path)
+    if "Unnamed: 0" in df_mc.columns:
+        df_mc = df_mc.drop(columns=["Unnamed: 0"])
+    df_mc = df_mc.rename(columns={"title": "title", "text": "text", "label": "label"})
+    df_mc["label"] = df_mc["label"].astype(str).str.strip().str.upper()
+    df_mc = df_mc[df_mc["label"].isin(["REAL", "FAKE"])].copy()
+    df_mc["combined_text"] = df_mc["title"].fillna("") + " " + df_mc["text"].fillna("")
+    df_mc["source"] = "McIntire"
+    all_dfs.append(df_mc[["title", "text", "label", "combined_text", "source"]])
+    print(f"[INFO] Loaded McIntire dataset: {len(df_mc)} records")
+    
+    # 2. FakeNewsNet PolitiFact (Real & Fake)
+    try:
+        p_real_path = download_source("fn_politifact_real", DATASET_SOURCES["fn_politifact_real"])
+        p_fake_path = download_source("fn_politifact_fake", DATASET_SOURCES["fn_politifact_fake"])
         
-    # Standardize column names
-    col_mapping = {}
-    for col in df.columns:
-        c_lower = col.strip().lower()
-        if c_lower in ["title", "headline"]:
-            col_mapping[col] = "title"
-        elif c_lower in ["text", "article", "content"]:
-            col_mapping[col] = "text"
-        elif c_lower in ["label", "target", "class"]:
-            col_mapping[col] = "label"
-            
-    df = df.rename(columns=col_mapping)
+        df_p_real = pd.read_csv(p_real_path)
+        df_p_real["label"] = "REAL"
+        df_p_real["text"] = df_p_real["title"]
+        df_p_real["combined_text"] = df_p_real["title"]
+        df_p_real["source"] = "FakeNewsNet_PolitiFact"
+        all_dfs.append(df_p_real[["title", "text", "label", "combined_text", "source"]])
+        
+        df_p_fake = pd.read_csv(p_fake_path)
+        df_p_fake["label"] = "FAKE"
+        df_p_fake["text"] = df_p_fake["title"]
+        df_p_fake["combined_text"] = df_p_fake["title"]
+        df_p_fake["source"] = "FakeNewsNet_PolitiFact"
+        all_dfs.append(df_p_fake[["title", "text", "label", "combined_text", "source"]])
+        print(f"[INFO] Loaded FakeNewsNet PolitiFact: {len(df_p_real) + len(df_p_fake)} records")
+    except Exception as e:
+        print(f"[WARNING] Could not load FakeNewsNet PolitiFact: {e}")
+        
+    # 3. FakeNewsNet GossipCop (Balanced sample of Real & Fake)
+    try:
+        g_real_path = download_source("fn_gossipcop_real", DATASET_SOURCES["fn_gossipcop_real"])
+        g_fake_path = download_source("fn_gossipcop_fake", DATASET_SOURCES["fn_gossipcop_fake"])
+        
+        df_g_real = pd.read_csv(g_real_path)
+        df_g_fake = pd.read_csv(g_fake_path)
+        
+        # Take balanced sample (e.g. 3,000 real and 3,000 fake) to maintain equilibrium
+        sample_n = min(len(df_g_fake), 3000)
+        df_g_fake = df_g_fake.sample(n=sample_n, random_state=42)
+        df_g_real = df_g_real.sample(n=sample_n, random_state=42)
+        
+        df_g_real["label"] = "REAL"
+        df_g_real["text"] = df_g_real["title"]
+        df_g_real["combined_text"] = df_g_real["title"]
+        df_g_real["source"] = "FakeNewsNet_GossipCop"
+        all_dfs.append(df_g_real[["title", "text", "label", "combined_text", "source"]])
+        
+        df_g_fake["label"] = "FAKE"
+        df_g_fake["text"] = df_g_fake["title"]
+        df_g_fake["combined_text"] = df_g_fake["title"]
+        df_g_fake["source"] = "FakeNewsNet_GossipCop"
+        all_dfs.append(df_g_fake[["title", "text", "label", "combined_text", "source"]])
+        print(f"[INFO] Loaded FakeNewsNet GossipCop (balanced sample): {len(df_g_real) + len(df_g_fake)} records")
+    except Exception as e:
+        print(f"[WARNING] Could not load FakeNewsNet GossipCop: {e}")
+
+    # Combine all
+    merged_df = pd.concat(all_dfs, ignore_index=True)
     
-    # Verify required columns
-    required_cols = ["title", "text", "label"]
-    for req in required_cols:
-        if req not in df.columns:
-            raise ValueError(f"Missing required column '{req}' in dataset. Found: {list(df.columns)}")
-            
-    # Normalize labels: REAL vs FAKE
-    df["label"] = df["label"].astype(str).str.strip().str.upper()
-    df = df[df["label"].isin(["REAL", "FAKE"])].copy()
+    # Clean text
+    merged_df["title"] = merged_df["title"].fillna("").astype(str).str.strip()
+    merged_df["text"] = merged_df["text"].fillna("").astype(str).str.strip()
+    merged_df["combined_text"] = merged_df["combined_text"].fillna("").astype(str).str.strip()
     
-    # Fill missing titles/texts with empty strings
-    df["title"] = df["title"].fillna("").astype(str).str.strip()
-    df["text"] = df["text"].fillna("").astype(str).str.strip()
+    # Filter short texts & remove duplicate combinations
+    merged_df = merged_df[merged_df["combined_text"].str.len() >= 15].copy()
+    merged_df = merged_df.drop_duplicates(subset=["combined_text"]).reset_index(drop=True)
     
-    # Create combined text
-    df["combined_text"] = df["title"] + " " + df["text"]
-    df["combined_text"] = df["combined_text"].str.strip()
+    # Balance classes if slight difference
+    real_count = (merged_df["label"] == "REAL").sum()
+    fake_count = (merged_df["label"] == "FAKE").sum()
+    min_count = min(real_count, fake_count)
     
-    # Drop rows with negligible content (less than 15 characters)
-    initial_len = len(df)
-    df = df[df["combined_text"].str.len() >= 15].copy()
+    real_subset = merged_df[merged_df["label"] == "REAL"].sample(n=min_count, random_state=42)
+    fake_subset = merged_df[merged_df["label"] == "FAKE"].sample(n=min_count, random_state=42)
+    balanced_df = pd.concat([real_subset, fake_subset], ignore_index=True).sample(frac=1.0, random_state=42).reset_index(drop=True)
     
-    # Remove duplicate records
-    df = df.drop_duplicates(subset=["combined_text"]).reset_index(drop=True)
-    final_len = len(df)
-    
-    print(f"[INFO] Raw records: {initial_len} -> Clean unique records: {final_len}")
-    
-    # Save cleaned dataset
-    df.to_csv(output_csv_path, index=False)
-    print(f"[INFO] Prepared dataset saved to: {output_csv_path}")
-    return df
+    # Save combined dataset
+    balanced_df.to_csv(OUTPUT_CSV, index=False)
+    print(f"[SUCCESS] Prepared expanded balanced dataset saved to: {OUTPUT_CSV} ({len(balanced_df)} articles)")
+    return balanced_df
 
 
 def perform_eda(df, save_plot=True):
-    """
-    Perform Exploratory Data Analysis:
-    - Count real vs fake
-    - Class distribution percentages
-    - Character and word length statistics
-    - Generate summary plots
-    """
+    """Exploratory data analysis on the expanded dataset."""
     ensure_directories()
-    print("\n" + "=" * 50)
-    print("      EXPLORATORY DATA ANALYSIS (EDA)")
-    print("=" * 50)
+    print("\n" + "=" * 55)
+    print("      EXPANDED DATASET EXPLORATORY ANALYSIS")
+    print("=" * 55)
     
     class_counts = df["label"].value_counts()
     total_samples = len(df)
     
-    print(f"Total Clean Samples: {total_samples}")
-    print(f"REAL news count:     {class_counts.get('REAL', 0)} ({class_counts.get('REAL', 0)/total_samples*100:.2f}%)")
-    print(f"FAKE news count:     {class_counts.get('FAKE', 0)} ({class_counts.get('FAKE', 0)/total_samples*100:.2f}%)")
+    print(f"Total Consolidated Articles: {total_samples}")
+    print(f"REAL news count:             {class_counts.get('REAL', 0)} ({class_counts.get('REAL', 0)/total_samples*100:.2f}%)")
+    print(f"FAKE news count:             {class_counts.get('FAKE', 0)} ({class_counts.get('FAKE', 0)/total_samples*100:.2f}%)")
     
-    # Word count and character count analysis
     df["word_count"] = df["combined_text"].apply(lambda x: len(str(x).split()))
-    df["char_count"] = df["combined_text"].apply(lambda x: len(str(x)))
+    print(f"Average Word Count:          {df['word_count'].mean():.1f} words (Median: {df['word_count'].median():.0f})")
     
-    print(f"Average Word Count:  {df['word_count'].mean():.1f} words (Median: {df['word_count'].median():.0f})")
-    print(f"Average Char Count:  {df['char_count'].mean():.1f} chars")
-    print(f"Missing Values:\n{df.isnull().sum()}")
-    print("=" * 50 + "\n")
+    if "source" in df.columns:
+        print("\nSamples by Source:")
+        print(df["source"].value_counts())
+    print("=" * 55 + "\n")
     
     if save_plot:
         sns.set_theme(style="whitegrid")
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
         
-        # 1. Class distribution bar chart
         palette = {"REAL": "#10b981", "FAKE": "#ef4444"}
-        sns.countplot(
-            data=df, 
-            x="label", 
-            hue="label",
-            legend=False,
-            palette=palette, 
-            ax=axes[0]
-        )
-        axes[0].set_title("Dataset Class Distribution (REAL vs FAKE)", fontsize=13, fontweight="bold", pad=12)
-        axes[0].set_xlabel("Class Label", fontsize=11)
-        axes[0].set_ylabel("Number of Articles", fontsize=11)
+        sns.countplot(data=df, x="label", hue="label", legend=False, palette=palette, ax=axes[0])
+        axes[0].set_title("Expanded Dataset Class Balance", fontsize=13, fontweight="bold", pad=12)
+        axes[0].set_xlabel("Class Label")
+        axes[0].set_ylabel("Articles Count")
+        
         for p in axes[0].patches:
-            height = p.get_height()
-            axes[0].annotate(f'{int(height)}\n({height/total_samples*100:.1f}%)',
-                            (p.get_x() + p.get_width() / 2., height / 2),
-                            ha='center', va='center', fontsize=11, color='white', fontweight='bold')
+            h = p.get_height()
+            axes[0].annotate(f"{int(h)}\n({h/total_samples*100:.1f}%)",
+                            (p.get_x() + p.get_width() / 2., h / 2),
+                            ha="center", va="center", fontsize=11, color="white", fontweight="bold")
                             
-        # 2. Word count distribution by class (capped at 95th percentile for clean display)
         p95 = df["word_count"].quantile(0.95)
         filtered_df = df[df["word_count"] <= p95]
-        sns.histplot(
-            data=filtered_df,
-            x="word_count",
-            hue="label",
-            palette=palette,
-            kde=True,
-            element="step",
-            bins=35,
-            ax=axes[1]
-        )
-        axes[1].set_title("Article Word Length Distribution by Class", fontsize=13, fontweight="bold", pad=12)
-        axes[1].set_xlabel("Word Count (up to 95th percentile)", fontsize=11)
-        axes[1].set_ylabel("Density / Count", fontsize=11)
+        sns.histplot(data=filtered_df, x="word_count", hue="label", palette=palette, kde=True, element="step", bins=30, ax=axes[1])
+        axes[1].set_title("Article Word Length Distribution", fontsize=13, fontweight="bold", pad=12)
+        axes[1].set_xlabel("Word Count")
+        axes[1].set_ylabel("Density / Count")
         
         plt.tight_layout()
         plot_path = os.path.join(RESULTS_DIR, "eda_distribution.png")
         plt.savefig(plot_path, dpi=300)
         plt.close()
-        print(f"[INFO] EDA Visualization saved to: {plot_path}")
+        print(f"[INFO] Updated EDA plot saved to: {plot_path}")
 
 
 def main():
-    raw_path = download_dataset()
-    df = clean_and_prepare_data(raw_path)
+    df = load_and_standardize_datasets()
     perform_eda(df, save_plot=True)
 
 

@@ -1,13 +1,15 @@
 """
 Inference & Prediction Pipeline.
 Loads saved model artifacts, executes preprocessing, generates predictions,
-calculates calibrated confidence scores, and extracts explainable linguistic features.
+calculates calibrated confidence scores, extracts explainable linguistic features,
+and runs AI live web verification against credible real-world news sources.
 """
 
 import os
 import sys
 import time
 import joblib
+import numpy as np
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(CURRENT_DIR)
@@ -16,6 +18,7 @@ if ROOT_DIR not in sys.path:
 
 from src.preprocessing import preprocess_text
 from src.explain import explain_prediction
+from src.web_verifier import verify_article_on_web
 
 MODELS_DIR = os.path.join(ROOT_DIR, "models")
 
@@ -29,7 +32,7 @@ class FakeNewsPredictor:
         self.model = None
         self.vectorizer = None
         self.label_encoder = None
-        self.model_title = "Linear SVM (Calibrated)"
+        self.model_title = "Logistic Regression"
         self.load_artifacts()
 
     def load_artifacts(self):
@@ -65,9 +68,10 @@ class FakeNewsPredictor:
             return True
         return False
 
-    def predict(self, raw_text: str) -> dict:
+    def predict(self, raw_text: str, check_web: bool = True) -> dict:
         """
         Execute full inference pipeline for a given raw text.
+        Optionally verifies claims on live web & fact checking APIs.
         """
         t0 = time.time()
         
@@ -97,16 +101,13 @@ class FakeNewsPredictor:
         # 4. Confidence / Probability Calculation
         if hasattr(self.model, "predict_proba"):
             probabilities = self.model.predict_proba(tfidf_features)[0]
-            # Prob for predicted class
             confidence = float(probabilities[pred_encoded])
         elif hasattr(self.model, "decision_function"):
-            # Calibrated decision score approximation if predict_proba is not available
             score = self.model.decision_function(tfidf_features)[0]
             confidence = float(1.0 / (1.0 + np.exp(-abs(score))))
         else:
             confidence = 0.90
             
-        # Ensure confidence is formatted as clean percentage (e.g., 94.2)
         confidence_pct = round(confidence * 100, 2)
         
         # 5. Explainable AI Feature Extraction
@@ -121,6 +122,19 @@ class FakeNewsPredictor:
             top_n=8
         )
         
+        # 6. Live AI Web Verification
+        web_info = None
+        if check_web:
+            try:
+                web_info = verify_article_on_web(raw_text_stripped)
+            except Exception as e:
+                web_info = {
+                    "status": "ERROR",
+                    "web_summary": f"Could not perform live web search: {str(e)}",
+                    "live_sources": [],
+                    "fact_checks": []
+                }
+        
         elapsed_ms = round((time.time() - t0) * 1000, 2)
         
         return {
@@ -132,6 +146,7 @@ class FakeNewsPredictor:
             "feature_details": xai_info["feature_details"],
             "explanation": xai_info["explanation"],
             "disclaimer": xai_info["disclaimer"],
+            "web_verification": web_info,
             "stats": {
                 "word_count": word_count,
                 "char_count": char_count,
@@ -156,14 +171,17 @@ if __name__ == "__main__":
     predictor = get_predictor()
     
     test_articles = [
-        "BREAKING: Secret cure for aging revealed by miracle doctor, government is trying to ban it!",
-        "The Federal Reserve announced on Wednesday that benchmark interest rates will remain unchanged following economic data."
+        "NASA James Webb Space Telescope discovers ancient distant galaxy formed after Big Bang.",
+        "Underground doctors leak secret miracle herb that cures all diseases in 48 hours."
     ]
     
     for article in test_articles:
-        res = predictor.predict(article)
-        print("\n" + "-" * 50)
-        print(f"Article: {article[:60]}...")
+        res = predictor.predict(article, check_web=True)
+        print("\n" + "=" * 50)
+        print(f"Article: {article}")
         print(f"Prediction: {res['prediction']} ({res['confidence']}%) | Model: {res['model_used']}")
         print(f"Important Terms: {res['important_features']}")
-        print(f"Explanation: {res['explanation']}")
+        if res.get("web_verification"):
+            print(f"Web Verdict: {res['web_verification'].get('web_verdict')}")
+            print(f"Web Summary: {res['web_verification'].get('web_summary')}")
+            print(f"Live Sources Found: {len(res['web_verification'].get('live_sources', []))}")

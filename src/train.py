@@ -33,7 +33,7 @@ if ROOT_DIR not in sys.path:
 
 from src.preprocessing import preprocess_corpus, preprocess_text
 from src.evaluate import compute_metrics, plot_confusion_matrices, plot_model_comparison
-from data.download_or_prepare import download_dataset, clean_and_prepare_data, OUTPUT_CSV
+from data.download_or_prepare import load_and_standardize_datasets, OUTPUT_CSV
 
 DATA_PATH = OUTPUT_CSV
 MODELS_DIR = os.path.join(ROOT_DIR, "models")
@@ -48,8 +48,7 @@ def ensure_dirs():
 def load_or_prepare_dataset():
     """Load dataset, preparing it if not yet present."""
     if not os.path.exists(DATA_PATH):
-        raw_path = download_dataset()
-        df = clean_and_prepare_data(raw_path)
+        df = load_and_standardize_datasets()
     else:
         df = pd.read_csv(DATA_PATH)
     return df
