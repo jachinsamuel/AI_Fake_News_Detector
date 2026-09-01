@@ -1,25 +1,16 @@
-# Fake News Detection System
+# AI Fake News Detection & Live Fact-Checking System
 
-A lightweight, interpretable Natural Language Processing (NLP) pipeline and web application to analyze news articles and detect linguistic misinformation patterns.
-
----
-
-## Overview
-
-This project implements a text-classification pipeline trained on a balanced benchmark dataset of 6,305 verified and fake news articles. It compares **Multinomial Naive Bayes**, **Logistic Regression**, and **Linear SVM**, optimizes hyperparameters via 3-Fold Stratified Cross-Validation, and serves predictions with calibrated confidence scores and explainable linguistic indicators through a Flask web interface.
+An end-to-end Machine Learning and Natural Language Processing (NLP) system combined with a real-time **AI Live Web Verification Agent** to detect misinformation, classify journalistic style, and cross-reference claims against live news wires and independent fact-checkers.
 
 ---
 
-## Model Benchmark Results
+## Key Features
 
-Evaluated on an untouched 20% test partition (1,261 articles) with a 25,000 unigram/bigram TF-IDF feature space:
-
-| Model | Hyperparameters | Accuracy | Precision | Recall | F1-Score | Status |
-|---|---|:---:|:---:|:---:|:---:|:---:|
-| **Linear SVM** | `C=5.0, Calibrated (cv=3)` | **93.66%** | **93.66%** | **93.66%** | **0.9366** | **Production Winner** |
-| **Logistic Regression** | `C=50.0, lbfgs` | 93.34% | 93.34% | 93.34% | 0.9334 | Strong Baseline |
-| **Multinomial Naive Bayes** | `alpha=0.01` | 90.33% | 90.37% | 90.33% | 0.9032 | Fast Baseline |
-| *DistilBERT (Optional)* | `distilbert-base-uncased` | *95.20%* | *95.25%* | *95.20%* | *0.9521* | Transformer Reference |
+* **Multi-Domain Dataset (12,736 Articles):** Consolidated and balanced across McIntire News, FakeNewsNet PolitiFact, and FakeNewsNet GossipCop datasets (covering Politics, Science, Health, Entertainment, and World News).
+* **Multi-Model ML Pipeline:** Compares **Linear SVM (Platt Calibrated)**, **Logistic Regression**, and **Multinomial Naive Bayes** with 3-Fold Stratified `GridSearchCV` hyperparameter tuning.
+* **Hybrid AI Live Web Verification:** Extracts claims in real-time and queries **NewsAPI**, **Google Fact Check Tools API**, **GNews API**, and **Google News RSS** to verify coverage and fact-checking records.
+* **Explainable AI (XAI):** Identifies top influential unigrams/bigrams and outputs plain-English reasoning for each prediction.
+* **Modern Web Interface:** Fast, responsive UI with live word/char counters, confidence gauge, detected vocabulary badges, and clickable live source citations.
 
 ---
 
@@ -33,17 +24,28 @@ cd AI_Fake_News_Detector
 pip install -r requirements.txt
 ```
 
-### 2. Download Data & Train Models
+### 2. Configure API Keys (Optional)
+
+The system works out-of-the-box using the built-in zero-key live search fallback. To add your own keys, edit `.env`:
+
+```ini
+# .env
+NEWS_API_KEY=your_newsapi_key
+GOOGLE_FACTCHECK_API_KEY=your_google_api_key
+GNEWS_API_KEY=your_gnews_key
+```
+
+### 3. Prepare Dataset & Train Models
 
 ```bash
-# 1. Download & clean the dataset
+# 1. Acquire and consolidate datasets (12,736 balanced records)
 python data/download_or_prepare.py
 
-# 2. Train and optimize all models
+# 2. Preprocess, train, and optimize ML models
 python src/train.py
 ```
 
-### 3. Launch Web Application
+### 4. Launch Web Application
 
 ```bash
 python app.py
@@ -51,7 +53,7 @@ python app.py
 
 Open **`http://127.0.0.1:5000`** in your browser.
 
-### 4. Run Test Suite
+### 5. Run Automated Tests
 
 ```bash
 python -m unittest tests/test_pipeline.py
@@ -61,50 +63,79 @@ python -m unittest tests/test_pipeline.py
 
 ## Pipeline Architecture
 
-1. **Preprocessing (`src/preprocessing.py`):**
-   * Lowercasing, URL removal, HTML stripping, punctuation filtering.
-   * Word tokenization, stopword removal (NLTK), and WordNet lemmatization.
+```
+User Input (Headline / Article)
+  │
+  ├──► [NLP Preprocessing] ──► [TF-IDF Vectorizer (25,000 features)] ──► [Classifier (Logistic Regression / SVM)]
+  │                                                                            │
+  └──► [Live Web Verifier Agent] ──► [Google Fact Check / NewsAPI / RSS] ──────┤
+                                                                               ▼
+                                                            [Hybrid Consensus Decision Engine]
+                                                                               │
+                                                                               ▼
+                                                            Verdict + Confidence + Live Citations
+```
+
+1. **Text Preprocessing (`src/preprocessing.py`):**
+   * HTML/URL stripping, punctuation cleaning, lowercasing.
+   * NLTK tokenization, stopword removal, and WordNet lemmatization.
 
 2. **Feature Extraction:**
-   * TF-IDF vectorizer (25,000 features, unigram + bigrams, sublinear term-frequency scaling).
-   * **Zero Data Leakage:** Fitted strictly on the 80% training split.
+   * 25,000 unigram/bigram features with sublinear term-frequency scaling.
+   * Strictly fitted on the training split to prevent data leakage.
 
-3. **Classification & Calibration (`src/train.py`):**
-   * Multi-model cross-validation with `GridSearchCV`.
-   * Platt probability scaling (`CalibratedClassifierCV`) on Linear SVM to provide true confidence percentages.
+3. **Classification & Probability Calibration (`src/train.py`):**
+   * Optimized with 3-Fold Stratified `GridSearchCV`.
+   * Calibrated probability scoring for accurate confidence measurements.
 
-4. **Explainable AI (`src/explain.py`):**
-   * Extracts model hyperplane weights $\text{Score}(w) = \theta_w \cdot \text{TF-IDF}(w)$ to highlight top influential words that drove the classification.
+4. **Live Web Verification (`src/web_verifier.py`):**
+   * Automatically extracts search queries from input claims.
+   * Queries Google Fact Check database (Snopes, PolitiFact, Reuters Fact Check) and live news feeds.
+   * Synthesizes web evidence into the final authenticity confidence score.
 
 ---
 
 ## REST API Reference
 
-### Predict Text Authenticity
+### Predict Authenticity
 * **Endpoint:** `POST /predict`
 * **Headers:** `Content-Type: application/json`
 * **Request:**
 ```json
 {
-  "text": "WASHINGTON (Reuters) - The Senate approved bipartisan infrastructure legislation on Thursday."
+  "text": "NASA James Webb Space Telescope discovers distant galaxy at cosmic dawn.",
+  "check_web": true
 }
 ```
 * **Response (200 OK):**
 ```json
 {
+  "status": "success",
   "prediction": "REAL",
-  "confidence": 95.48,
-  "model": "Linear SVM (Calibrated)",
-  "important_features": ["republican", "leader", "relief", "senate", "thursday"],
-  "explanation": "The article exhibits formal reporting syntax and structured journalistic terminology.",
-  "processing_time_ms": 11.4
+  "confidence": 94.0,
+  "model": "Logistic Regression",
+  "important_features": ["telescope", "galaxy", "nasa", "space", "distant"],
+  "explanation": "Corroborating reporting found across 4 active web news articles.",
+  "web_verification": {
+    "web_verdict": "MATCHING_NEWS_FOUND",
+    "sources_count": 4,
+    "live_sources": [
+      {
+        "title": "NASA's Roman Space Telescope launches to map billions of galaxies",
+        "source": "The Brighter Side of News",
+        "url": "https://..."
+      }
+    ]
+  },
+  "processing_time_ms": 520.4
 }
 ```
 
 ### Additional Endpoints
-* `GET /api/metrics` — Returns cross-validation and test set metrics for all models.
-* `GET /api/examples` — Returns pre-configured sample news articles for testing.
-* `GET /api/health` — Service readiness status.
+* `GET /api/config` — Returns active API services and server health.
+* `GET /api/metrics` — Returns cross-validation and test set metrics.
+* `GET /api/examples` — Returns pre-configured sample news articles.
+* `GET /api/health` — System health check.
 
 ---
 
@@ -112,39 +143,43 @@ python -m unittest tests/test_pipeline.py
 
 ```
 FakeNews/
+├── .env.example              # Example environment configuration
+├── .gitignore                # Git exclusions (protects secrets & caches)
+├── app.py                    # Flask server & REST API
+├── requirements.txt          # Python dependencies
 ├── data/
-│   ├── download_or_prepare.py    # Dataset acquisition & EDA
-│   └── news.csv                  # 6,305 labeled articles
+│   ├── download_or_prepare.py# Multi-dataset consolidation & EDA
+│   └── news.csv              # 12,736 labeled articles
 ├── models/
-│   ├── best_model.pkl            # Serialized winning model
-│   ├── vectorizer.pkl            # Fitted TF-IDF vectorizer
-│   └── model_metadata.json       # Training metadata & scores
-├── notebooks/
-│   └── experiments.ipynb         # Interactive Jupyter research notebook
+│   ├── best_model.pkl        # Serialized production model
+│   ├── vectorizer.pkl        # Fitted TF-IDF vectorizer
+│   ├── label_encoder.pkl     # Label mapping
+│   └── model_metadata.json   # Training scores & parameters
 ├── results/
-│   ├── model_comparison.csv      # CSV metrics table
-│   └── model_comparison.png      # Evaluation bar chart
+│   ├── model_comparison.csv  # Benchmark metrics table
+│   ├── model_comparison.png  # Performance comparison chart
+│   ├── confusion_matrices.png# Confusion matrices
+│   └── eda_distribution.png  # Dataset exploratory analysis
 ├── src/
-│   ├── preprocessing.py          # NLP text cleaning pipeline
-│   ├── train.py                  # Training & GridSearchCV optimization
-│   ├── evaluate.py               # Metric calculation & visualization
-│   ├── explain.py                # XAI feature importance extraction
-│   ├── predict.py                # Standalone inference class
-│   └── distilbert_train.py       # Optional Transformer fine-tuning
-├── templates/
-│   └── index.html                # Clean web UI
+│   ├── config.py             # Environment & API key loader
+│   ├── preprocessing.py      # NLP text cleaning pipeline
+│   ├── train.py              # ML training & GridSearchCV
+│   ├── evaluate.py           # Evaluation metrics & charts
+│   ├── explain.py            # Feature importance & XAI
+│   ├── predict.py            # Inference & Hybrid decision synthesis
+│   ├── web_verifier.py       # AI Live Web Verification agent
+│   └── distilbert_train.py   # Optional transformer fine-tuning
 ├── static/
-│   ├── style.css                 # Editorial CSS stylesheet
-│   └── script.js                 # Client-side controller
-├── tests/
-│   └── test_pipeline.py          # Unit & integration tests
-├── app.py                        # Flask server & REST API
-└── requirements.txt              # Dependencies
+│   ├── style.css             # Minimalist styling
+│   └── script.js             # Client-side controller
+├── templates/
+│   └── index.html            # Web application interface
+└── tests/
+    └── test_pipeline.py      # 17 Automated unit & integration tests
 ```
 
 ---
 
-## Limitations
+## License
 
-* **Linguistic Classifier:** This system classifies stylistic and vocabulary patterns learned from training data. It does not verify real-world facts against live external news databases.
-* **Adversarial Text:** Heavily edited or nuanced satire may occasionally bypass purely lexical filters.
+Open source under the [MIT License](LICENSE).

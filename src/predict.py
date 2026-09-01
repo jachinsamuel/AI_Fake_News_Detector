@@ -135,26 +135,31 @@ class FakeNewsPredictor:
                     # Case 1: Debunked by independent fact-checkers (Snopes/PolitiFact/Reuters)
                     if web_info.get("is_debunked"):
                         final_prediction = "FAKE"
-                        final_confidence = round(max(confidence_pct, 94.5), 2)
+                        final_confidence = round(max(confidence_pct, 95.5), 2)
                         publisher = web_info["fact_checks"][0]["publisher"]
                         rating = web_info["fact_checks"][0]["rating"]
                         final_explanation = f"Flagged and debunked by independent fact-checkers ({publisher}) with verified rating: '{rating}'."
 
-                    # Case 2: Corroborated by live credible news organizations (e.g. Bloomberg, NYT, BBC, Reuters, DW)
+                    # Case 2: Uncorroborated critical event claim (e.g. death / assassination / arrest / cure hoaxes)
+                    elif web_info.get("is_uncorroborated_hoax") or web_info.get("web_verdict") == "UNCORROBORATED_CRITICAL_CLAIM":
+                        final_prediction = "FAKE"
+                        final_confidence = 95.8
+                        final_explanation = f"Uncorroborated sensational claim / death rumor. If this major event were real, every international news wire would report it. Zero credible news sources confirm this claim."
+
+                    # Case 3: Corroborated by live credible news organizations (e.g. Bloomberg, NYT, BBC, Reuters, DW)
                     elif web_info.get("credible_sources_count", 0) >= 1 or web_info.get("web_verdict") == "CORROBORATED_BY_LIVE_NEWS":
                         final_prediction = "REAL"
-                        # Synthesize strong confidence
                         final_confidence = round(min(97.5, max(confidence_pct + 42.0, 93.8)), 2)
                         lead_source = web_info["live_sources"][0]["source"] if web_info.get("live_sources") else "Verified News Wires"
                         final_explanation = f"Corroborated by live news coverage across {len(web_info.get('live_sources', []))} major news sources including {lead_source}."
 
-                    # Case 3: Multiple matching live articles found
+                    # Case 4: Multiple matching live articles found
                     elif web_info.get("sources_count", 0) >= 2:
                         final_prediction = "REAL"
                         final_confidence = round(min(94.0, max(confidence_pct + 32.0, 88.5)), 2)
                         final_explanation = f"Corroborating reporting found across {web_info['sources_count']} active web news articles."
 
-                    # Case 4: No live web reporting found for a short query (heuristic for unverified claims)
+                    # Case 5: No live web reporting found for a short query
                     elif word_count <= 25 and web_info.get("sources_count", 0) == 0 and not web_info.get("fact_checks"):
                         if predicted_label == "REAL" and confidence_pct < 65:
                             final_confidence = round(confidence_pct, 2)
