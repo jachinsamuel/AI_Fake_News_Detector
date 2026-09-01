@@ -176,9 +176,17 @@ class TestFlaskAPI(unittest.TestCase):
         self.assertEqual(data["status"], "online")
         self.assertIn("active_api_services", data)
 
+    def test_scrape_url_route_invalid(self):
+        response = self.client.post(
+            "/api/scrape-url",
+            data=json.dumps({"url": ""}),
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 400)
 
-class TestWebVerifier(unittest.TestCase):
-    """Test AI Live Web Verification agent."""
+
+class TestWebVerifierAndKnowledgeGrounding(unittest.TestCase):
+    """Test AI Live Web Verification agent and Wikipedia Grounding."""
 
     def test_query_extraction(self):
         from src.web_verifier import extract_search_query
@@ -196,6 +204,33 @@ class TestWebVerifier(unittest.TestCase):
         self.assertIn("web_verdict", res)
         self.assertIn("live_sources", res)
         self.assertIn("web_summary", res)
+
+    def test_wikipedia_grounding(self):
+        from src.web_verifier import query_wikipedia_grounding
+        res = query_wikipedia_grounding("Narendra_Modi", "Narendra Modi is the prime minister of india")
+        self.assertIsNotNone(res)
+        self.assertIn("entity", res)
+        self.assertTrue(res["is_grounded"])
+
+
+class TestCacheAndScraper(unittest.TestCase):
+    """Test LRU QueryCache and URL Scraper."""
+
+    def test_lru_cache_operations(self):
+        from src.cache import QueryCache
+        cache = QueryCache(maxsize=3, ttl_seconds=60)
+        cache.set("test query", {"res": "ok"})
+        hit = cache.get("test query")
+        self.assertIsNotNone(hit)
+        self.assertEqual(hit["res"], "ok")
+        self.assertTrue(hit.get("cached"))
+        miss = cache.get("nonexistent query")
+        self.assertIsNone(miss)
+
+    def test_scraper_validation(self):
+        from src.scraper import scrape_article_from_url
+        with self.assertRaises(ValueError):
+            scrape_article_from_url("")
 
 
 if __name__ == "__main__":

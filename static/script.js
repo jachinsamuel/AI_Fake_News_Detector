@@ -1,9 +1,21 @@
 /**
- * Fake News Detector Controller with Live Web Verification
+ * Fake News Detector Controller with URL Scraping, Wikipedia Grounding & Caching
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Inputs & Telemetry
+    // Mode Switcher Elements
+    const tabText = document.getElementById("tab-text");
+    const tabUrl = document.getElementById("tab-url");
+    const panelText = document.getElementById("panel-text");
+    const panelUrl = document.getElementById("panel-url");
+    const urlInput = document.getElementById("url-input");
+    const fetchUrlBtn = document.getElementById("fetch-url-btn");
+    const urlSpinner = document.getElementById("url-spinner");
+    const scrapedMeta = document.getElementById("scraped-meta");
+    const scrapedTitle = document.getElementById("scraped-title");
+    const scrapedSource = document.getElementById("scraped-source");
+
+    // Text & Telemetry Inputs
     const newsInput = document.getElementById("news-input");
     const wordCountSpan = document.getElementById("word-count");
     const charCountSpan = document.getElementById("char-count");
@@ -20,12 +32,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // Results Elements
     const resultCard = document.getElementById("result-card");
     const verdictTag = document.getElementById("verdict-tag");
+    const statModel = document.getElementById("stat-model");
     const confidenceVal = document.getElementById("confidence-val");
     const confidenceBar = document.getElementById("confidence-bar");
     const featureTagsContainer = document.getElementById("feature-tags-container");
     const explanationText = document.getElementById("explanation-text");
 
-    // Live Web Verification Elements
+    // Wikipedia & Live Web Elements
+    const wikiBox = document.getElementById("wiki-grounding-box");
+    const wikiDesc = document.getElementById("wiki-desc");
+    const wikiSnippet = document.getElementById("wiki-snippet");
+    const wikiLink = document.getElementById("wiki-link");
+
     const webVerificationBox = document.getElementById("web-verification-box");
     const webVerdictBadge = document.getElementById("web-verdict-badge");
     const webSummaryText = document.getElementById("web-summary-text");
@@ -34,7 +52,88 @@ document.addEventListener("DOMContentLoaded", () => {
     const factChecksContainer = document.getElementById("fact-checks-container");
     const factChecksList = document.getElementById("fact-checks-list");
 
-    // 1. Text Counter
+    const telemetryLatency = document.getElementById("telemetry-latency");
+    const telemetryCache = document.getElementById("telemetry-cache");
+
+    // 1. Mode Switcher
+    tabText.addEventListener("click", () => {
+        tabText.classList.add("active");
+        tabUrl.classList.remove("active");
+        panelText.classList.remove("hidden");
+        panelUrl.classList.add("hidden");
+        newsInput.focus();
+    });
+
+    tabUrl.addEventListener("click", () => {
+        tabUrl.classList.add("active");
+        tabText.classList.remove("active");
+        panelUrl.classList.remove("hidden");
+        panelText.classList.add("hidden");
+        urlInput.focus();
+    });
+
+    // 2. URL Scraper Fetch
+    fetchUrlBtn.addEventListener("click", handleUrlFetch);
+    urlInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleUrlFetch();
+        }
+    });
+
+    async function handleUrlFetch() {
+        const url = urlInput.value.trim();
+        if (!url) {
+            showError("Please paste a valid news article URL.");
+            return;
+        }
+
+        hideError();
+        setScrapeLoading(true);
+
+        try {
+            const resp = await fetch("/api/scrape-url", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: url })
+            });
+            const data = await resp.json();
+
+            if (!resp.ok || data.error) {
+                showError(data.message || data.error || "Could not scrape article from link.");
+                setScrapeLoading(false);
+                return;
+            }
+
+            const article = data.data;
+            newsInput.value = article.combined_text;
+            updateTextStats();
+
+            // Show scraped preview
+            scrapedTitle.textContent = article.title;
+            scrapedSource.textContent = `Source: ${article.source} • ${article.word_count} words extracted`;
+            scrapedMeta.classList.remove("hidden");
+
+            // Auto-trigger analysis
+            analyzeText();
+        } catch (err) {
+            showError("Network error connecting to scraper service.");
+        } finally {
+            setScrapeLoading(false);
+        }
+    }
+
+    function setScrapeLoading(isLoading) {
+        if (isLoading) {
+            urlSpinner.classList.remove("hidden");
+            fetchUrlBtn.disabled = true;
+        } else {
+            urlSpinner.classList.add("hidden");
+            fetchUrlBtn.disabled = false;
+        }
+    }
+
+    // 3. Text Counter
     function updateTextStats() {
         const text = newsInput.value.trim();
         const chars = text.length;
@@ -49,36 +148,38 @@ document.addEventListener("DOMContentLoaded", () => {
         hideError();
     });
 
-    // 2. Clear Button
+    // 4. Clear Button
     clearBtn.addEventListener("click", () => {
         newsInput.value = "";
+        urlInput.value = "";
+        scrapedMeta.classList.add("hidden");
         updateTextStats();
         hideError();
         resultCard.classList.add("hidden");
         newsInput.focus();
     });
 
-    // 3. Keyboard Shortcut: Ctrl + Enter
-    newsInput.addEventListener("keydown", (e) => {
+    // 5. Keyboard Shortcut: Ctrl + Enter
+    document.addEventListener("keydown", (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
             e.preventDefault();
             analyzeText();
         }
     });
 
-    // 4. Analyze Action
+    // 6. Analyze Action
     analyzeBtn.addEventListener("click", analyzeText);
 
     async function analyzeText() {
         const text = newsInput.value.trim();
         if (!text) {
-            showError("Please enter or paste a news article before analyzing.");
+            showError("Please enter news text or fetch an article URL before analyzing.");
             return;
         }
 
         const words = text.split(/\s+/).filter(w => w.length > 0).length;
         if (words < 3 && text.length < 15) {
-            showError("Input text is too short. Please provide at least 3 words or a headline.");
+            showError("Input text is too short. Please provide at least 3 words or a complete headline.");
             return;
         }
 
@@ -118,12 +219,13 @@ document.addEventListener("DOMContentLoaded", () => {
     function displayResult(data) {
         const isReal = data.prediction.toUpperCase() === "REAL";
 
-        // Set state class
+        // State classes
         resultCard.classList.remove("is-real", "is-fake");
         resultCard.classList.add(isReal ? "is-real" : "is-fake");
 
-        // Verdict labels
+        // Verdict & Model
         verdictTag.textContent = isReal ? "✓ REAL NEWS" : "⚠ FAKE NEWS";
+        statModel.textContent = data.model || "Ensemble Classifier";
 
         // Confidence
         const confPct = Math.round(data.confidence * 10) / 10;
@@ -145,13 +247,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 tag.textContent = item.word;
                 featureTagsContainer.appendChild(tag);
             });
-        } else if (data.important_features && data.important_features.length > 0) {
-            data.important_features.forEach(word => {
-                const tag = document.createElement("span");
-                tag.className = `word-tag ${isReal ? 'real' : 'fake'}`;
-                tag.textContent = word;
-                featureTagsContainer.appendChild(tag);
-            });
         } else {
             featureTagsContainer.innerHTML = '<span class="word-tag">General vocabulary</span>';
         }
@@ -159,18 +254,31 @@ document.addEventListener("DOMContentLoaded", () => {
         // Explanation text
         explanationText.textContent = data.explanation;
 
-        // Render Live Web Verification & Sources
+        // Wikipedia Grounding
         const web = data.web_verification;
+        if (web && web.wikipedia_grounding && web.wikipedia_grounding.is_grounded) {
+            wikiBox.classList.remove("hidden");
+            wikiDesc.textContent = `${web.wikipedia_grounding.entity} — ${web.wikipedia_grounding.description}`;
+            wikiSnippet.textContent = web.wikipedia_grounding.extract_snippet;
+            wikiLink.href = web.wikipedia_grounding.url;
+        } else {
+            wikiBox.classList.add("hidden");
+        }
+
+        // Live Web Verification & Sources
         if (web && web.status === "SUCCESS") {
             webVerificationBox.classList.remove("hidden");
             webSummaryText.textContent = web.web_summary || "Live web analysis completed.";
 
-            // Set web verdict badge
+            // Web verdict badge
             webVerdictBadge.className = "web-status-badge";
             if (web.is_debunked) {
                 webVerdictBadge.textContent = "Debunked by Fact-Checkers";
                 webVerdictBadge.classList.add("debunked");
-            } else if (web.web_verdict === "CORROBORATED_BY_LIVE_NEWS") {
+            } else if (web.is_uncorroborated_hoax) {
+                webVerdictBadge.textContent = "Uncorroborated Hoax";
+                webVerdictBadge.classList.add("debunked");
+            } else if (web.web_verdict.includes("WIKIPEDIA") || web.web_verdict === "CORROBORATED_BY_LIVE_NEWS") {
                 webVerdictBadge.textContent = "Corroborated by News Outlets";
                 webVerdictBadge.classList.add("corroborated");
             } else if (web.sources_count > 0) {
@@ -224,6 +332,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } else {
             webVerificationBox.classList.add("hidden");
+        }
+
+        // Telemetry
+        const timeMs = data.processing_time_ms !== undefined ? data.processing_time_ms : 300;
+        telemetryLatency.textContent = `Latency: ${timeMs}ms`;
+        if (data.cached) {
+            telemetryCache.classList.remove("hidden");
+        } else {
+            telemetryCache.classList.add("hidden");
         }
 
         // Reveal card

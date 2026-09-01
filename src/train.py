@@ -152,6 +152,21 @@ def run_training_pipeline(tune_hyperparameters: bool = True):
         calibrated_svm.fit(X_train_tfidf, y_train)
         models_to_train["Linear SVM"] = calibrated_svm
         
+        # 5.4 Soft-Voting Ensemble Classifier
+        print("        [+] Building Soft-Voting Ensemble Classifier...")
+        from sklearn.ensemble import VotingClassifier
+        ensemble_clf = VotingClassifier(
+            estimators=[
+                ("lr", best_lr),
+                ("svm", calibrated_svm),
+                ("nb", best_nb)
+            ],
+            voting="soft",
+            n_jobs=-1
+        )
+        ensemble_clf.fit(X_train_tfidf, y_train)
+        models_to_train["Ensemble Classifier"] = ensemble_clf
+        
     else:
         # Fast baseline training
         nb = MultinomialNB(alpha=0.1)
@@ -166,6 +181,15 @@ def run_training_pipeline(tune_hyperparameters: bool = True):
         calibrated_svm = CalibratedClassifierCV(base_svm, cv=3)
         calibrated_svm.fit(X_train_tfidf, y_train)
         models_to_train["Linear SVM"] = calibrated_svm
+
+        from sklearn.ensemble import VotingClassifier
+        ensemble_clf = VotingClassifier(
+            estimators=[("lr", lr), ("svm", calibrated_svm), ("nb", nb)],
+            voting="soft",
+            n_jobs=-1
+        )
+        ensemble_clf.fit(X_train_tfidf, y_train)
+        models_to_train["Ensemble Classifier"] = ensemble_clf
 
     # 6. Evaluation on Unseen Test Split
     print("\n[6/7] Evaluating All Models on Independent Test Set (20%)...")

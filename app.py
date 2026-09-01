@@ -16,6 +16,8 @@ if CURRENT_DIR not in sys.path:
 
 from src.predict import get_predictor
 from src.config import get_available_api_services
+from src.scraper import scrape_article_from_url
+from src.cache import get_cache
 
 app = Flask(__name__)
 CORS(app)
@@ -125,6 +127,7 @@ def predict():
             "disclaimer": result["disclaimer"],
             "web_verification": result.get("web_verification"),
             "stats": result["stats"],
+            "cached": result.get("cached", False),
             "processing_time_ms": result["processing_time_ms"]
         }), 200
 
@@ -133,6 +136,38 @@ def predict():
             "error": "Inference Error",
             "message": f"An error occurred during prediction: {str(e)}"
         }), 500
+
+
+@app.route("/api/scrape-url", methods=["POST"])
+def scrape_url():
+    """
+    Extract article title and body text from a provided web URL.
+    Accepts JSON: {"url": "https://..."}
+    """
+    url = ""
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        url = data.get("url", "")
+    elif request.form:
+        url = request.form.get("url", "")
+
+    if not url or not url.strip():
+        return jsonify({
+            "error": "Validation Error",
+            "message": "Please provide a valid news article URL."
+        }), 400
+
+    try:
+        scraped_data = scrape_article_from_url(url.strip())
+        return jsonify({
+            "status": "success",
+            "data": scraped_data
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "error": "Scraping Error",
+            "message": f"Could not extract article from URL: {str(e)}"
+        }), 400
 
 
 @app.route("/api/metrics", methods=["GET"])

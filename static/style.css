@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Clean & Minimalist Fake News Detector Styles with Live Web Verification
+   Clean & Minimalist Fake News Detector Styles with URL Scraper & Wikipedia
    ========================================================================== */
 
 :root {
@@ -55,7 +55,7 @@ body {
 .app-header {
     padding: 24px 0 20px;
     border-bottom: 1px solid var(--border-color);
-    margin-bottom: 32px;
+    margin-bottom: 28px;
 }
 
 .header-content {
@@ -71,9 +71,19 @@ body {
     letter-spacing: -0.02em;
 }
 
+.badge-pill {
+    background-color: #F1F5F9;
+    border: 1px solid var(--border-color);
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+}
+
 /* Main Content */
 .intro {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .intro h1 {
@@ -87,6 +97,36 @@ body {
 .intro p {
     color: var(--text-muted);
     font-size: 0.95rem;
+}
+
+/* Mode Switcher Tabs */
+.mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tab-btn:hover {
+    color: var(--text-main);
+}
+
+.tab-btn.active {
+    background-color: #FFFFFF;
+    border-color: var(--border-color);
+    color: var(--text-main);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 /* Cards */
@@ -136,7 +176,7 @@ textarea {
     color: var(--text-main);
     outline: none;
     resize: vertical;
-    min-height: 160px;
+    min-height: 150px;
     transition: border-color 0.15s ease;
 }
 
@@ -149,6 +189,51 @@ textarea::placeholder {
     color: #94A3B8;
 }
 
+/* URL Input Styles */
+.url-input-wrapper {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.url-input-wrapper input {
+    flex: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.url-input-wrapper input:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.scraped-info-box {
+    background-color: #F8FAFC;
+    border: 1px solid var(--border-color);
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.scraped-title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--text-main);
+    margin-bottom: 2px;
+}
+
+.scraped-source {
+    font-size: 0.76rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+}
+
+/* Footer & Actions */
 .card-footer {
     display: flex;
     justify-content: space-between;
@@ -190,6 +275,9 @@ textarea::placeholder {
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .btn-secondary:hover {
@@ -216,10 +304,6 @@ textarea::placeholder {
     background-color: var(--color-primary-hover);
 }
 
-.btn-primary:active {
-    transform: scale(0.99);
-}
-
 .spinner {
     width: 14px;
     height: 14px;
@@ -227,6 +311,11 @@ textarea::placeholder {
     border-top-color: #FFFFFF;
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
+}
+
+.btn-secondary .spinner {
+    border-color: rgba(0, 0, 0, 0.15);
+    border-top-color: #0F172A;
 }
 
 @keyframes spin {
@@ -287,6 +376,12 @@ textarea::placeholder {
     background-color: var(--fake-bg);
     color: var(--fake-text);
     border: 1px solid var(--fake-border);
+}
+
+.verdict-model {
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    color: var(--text-light);
 }
 
 .confidence-block {
@@ -382,14 +477,57 @@ textarea::placeholder {
     font-size: 0.86rem;
     color: var(--text-muted);
     line-height: 1.5;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+}
+
+/* Wikipedia Box */
+.wiki-box {
+    background-color: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    padding: 12px 14px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+.wiki-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #1E40AF;
+    margin-bottom: 4px;
+}
+
+.wiki-desc {
+    font-weight: 700;
+    font-size: 0.86rem;
+    color: #1E3A8A;
+    margin-bottom: 4px;
+}
+
+.wiki-snippet {
+    font-size: 0.8rem;
+    color: #3B82F6;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.wiki-url {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #2563EB;
+    text-decoration: none;
+}
+
+.wiki-url:hover {
+    text-decoration: underline;
 }
 
 /* Live Web Verification Box */
 .web-verification-section {
     border-top: 1px solid var(--border-color);
     padding-top: 18px;
-    margin-top: 20px;
+    margin-top: 16px;
 }
 
 .web-header {
@@ -496,8 +634,17 @@ textarea::placeholder {
     color: #991B1B;
 }
 
-.fact-check-item:hover {
-    background-color: #FEE2E2;
+/* Telemetry Footer */
+.result-telemetry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    margin-top: 18px;
+    padding-top: 10px;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--text-light);
 }
 
 .hidden {
@@ -516,15 +663,8 @@ textarea::placeholder {
         align-items: flex-start;
         gap: 8px;
     }
-    .confidence-block {
-        text-align: left;
-    }
-    .card-footer {
+    .url-input-wrapper {
         flex-direction: column;
-        align-items: stretch;
-    }
-    .actions {
-        justify-content: flex-end;
     }
     .source-title {
         max-width: 60%;

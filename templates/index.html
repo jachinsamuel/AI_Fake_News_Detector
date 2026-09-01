@@ -19,6 +19,9 @@
                 <div class="brand">
                     <span class="brand-name">Fake News Detector</span>
                 </div>
+                <div class="nav-badges">
+                    <span class="badge-pill" id="badge-ensemble">Ensemble ML &amp; Live Web AI</span>
+                </div>
             </div>
         </header>
 
@@ -27,31 +30,64 @@
             <!-- Headline -->
             <section class="intro">
                 <h1>Analyze News Authenticity</h1>
-                <p>Paste a news headline or complete article below to predict authenticity using machine learning and live web verification.</p>
+                <p>Paste a news headline, complete article text, or a live article link to predict authenticity using machine learning and live web verification.</p>
             </section>
+
+            <!-- Mode Selector Tabs -->
+            <div class="mode-tabs">
+                <button type="button" class="tab-btn active" id="tab-text" data-mode="text">Enter Text / Headline</button>
+                <button type="button" class="tab-btn" id="tab-url" data-mode="url">Paste News Link (URL)</button>
+            </div>
 
             <!-- Input Card -->
             <div class="card input-card">
-                <div class="card-header">
-                    <label for="news-input">News Article or Headline</label>
-                    <div class="counter">
-                        <span id="word-count">0 words</span>
-                        <span class="sep">•</span>
-                        <span id="char-count">0 characters</span>
+                <!-- Text Input Panel -->
+                <div id="panel-text" class="input-panel">
+                    <div class="card-header">
+                        <label for="news-input">News Article or Headline</label>
+                        <div class="counter">
+                            <span id="word-count">0 words</span>
+                            <span class="sep">•</span>
+                            <span id="char-count">0 characters</span>
+                        </div>
+                    </div>
+
+                    <textarea 
+                        id="news-input" 
+                        placeholder="Enter or paste article text here..." 
+                        rows="7"
+                    ></textarea>
+                </div>
+
+                <!-- URL Input Panel -->
+                <div id="panel-url" class="input-panel hidden">
+                    <div class="card-header">
+                        <label for="url-input">Direct Article Web Link</label>
+                        <span class="counter">Live Web Scraper</span>
+                    </div>
+
+                    <div class="url-input-wrapper">
+                        <input 
+                            type="url" 
+                            id="url-input" 
+                            placeholder="https://www.reuters.com/world/article-headline..."
+                        >
+                        <button type="button" id="fetch-url-btn" class="btn-secondary">
+                            <span class="btn-text">Fetch Article</span>
+                            <span class="spinner hidden" id="url-spinner"></span>
+                        </button>
+                    </div>
+                    <div id="scraped-meta" class="scraped-info-box hidden">
+                        <span class="scraped-title" id="scraped-title"></span>
+                        <span class="scraped-source" id="scraped-source"></span>
                     </div>
                 </div>
 
-                <textarea 
-                    id="news-input" 
-                    placeholder="Enter or paste article text here..." 
-                    rows="7"
-                ></textarea>
-
                 <div class="card-footer">
                     <div class="footer-left">
-                        <label class="toggle-label" title="Search live web sources and Google Fact Check database">
+                        <label class="toggle-label" title="Search live web sources, fact-checkers, and Wikipedia">
                             <input type="checkbox" id="check-web-toggle" checked>
-                            <span>Verify with Live Web &amp; Fact-Checkers</span>
+                            <span>Verify with Live Web, Fact-Checkers &amp; Wikipedia</span>
                         </label>
                     </div>
                     <div class="actions">
@@ -74,6 +110,7 @@
                 <div class="result-top">
                     <div class="verdict-block">
                         <span class="verdict-tag" id="verdict-tag">REAL NEWS</span>
+                        <span class="verdict-model" id="stat-model">Soft-Voting Ensemble</span>
                     </div>
                     <div class="confidence-block">
                         <span class="confidence-label">Confidence</span>
@@ -99,6 +136,17 @@
                     <p id="explanation-text"></p>
                 </div>
 
+                <!-- Wikipedia Fact Grounding Box -->
+                <div class="wiki-box hidden" id="wiki-grounding-box">
+                    <div class="wiki-badge-row">
+                        <span class="wiki-icon">📖</span>
+                        <strong>Wikipedia Encyclopedic Grounding</strong>
+                    </div>
+                    <p class="wiki-desc" id="wiki-desc"></p>
+                    <p class="wiki-snippet" id="wiki-snippet"></p>
+                    <a href="#" id="wiki-link" target="_blank" rel="noopener noreferrer" class="wiki-url">View Wikipedia Article →</a>
+                </div>
+
                 <!-- Live Web Verification & Sources Section -->
                 <div class="web-verification-section hidden" id="web-verification-box">
                     <div class="web-header">
@@ -122,6 +170,12 @@
                             <!-- Filled dynamically -->
                         </div>
                     </div>
+                </div>
+
+                <!-- Result Telemetry Footer -->
+                <div class="result-telemetry">
+                    <span id="telemetry-latency">Latency: 350ms</span>
+                    <span id="telemetry-cache" class="hidden">⚡ Served from instant cache</span>
                 </div>
             </div>
         </main>

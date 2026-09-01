@@ -39,7 +39,15 @@
             "Recall": 0.8124,
             "F1 Score": 0.8124,
             "F1 (Macro)": 0.8124
+        },
+        {
+            "Model": "Ensemble Classifier",
+            "Accuracy": 0.8175,
+            "Precision": 0.8187,
+            "Recall": 0.8175,
+            "F1 Score": 0.8173,
+            "F1 (Macro)": 0.8173
         }
     ],
-    "trained_at": "2026-08-31 14:27:55"
+    "trained_at": "2026-09-01 20:25:27"
 }
