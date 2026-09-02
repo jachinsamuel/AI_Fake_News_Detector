@@ -634,13 +634,45 @@ textarea::placeholder {
     color: #991B1B;
 }
 
+/* Result Actions Bar */
+.result-actions-bar {
+    margin-top: 18px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-export {
+    background-color: #F8FAFC;
+    border: 1px solid var(--border-color);
+    color: #0F172A;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+}
+
+.btn-export:hover {
+    background-color: #FFFFFF;
+    border-color: #0F172A;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.export-icon {
+    font-size: 1rem;
+}
+
 /* Telemetry Footer */
 .result-telemetry {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid var(--border-color);
-    margin-top: 18px;
+    margin-top: 14px;
     padding-top: 10px;
     font-size: 0.75rem;
     font-family: var(--font-mono);

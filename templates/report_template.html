@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fact-Check Verification Report - {{ report_id }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 14mm 16mm;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            color: #0F172A;
+            background: #FFFFFF;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .report-sheet {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #E2E8F0;
+            padding: 32px;
+            border-radius: 8px;
+        }
+
+        /* Header */
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #0F172A;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .header-title-block h1 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #0F172A;
+        }
+
+        .header-title-block p {
+            font-size: 0.8rem;
+            color: #64748B;
+            margin-top: 2px;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #475569;
+        }
+
+        .header-meta strong {
+            display: block;
+            color: #0F172A;
+        }
+
+        /* Executive Summary */
+        .summary-card {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .verdict-tag {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 0.03em;
+        }
+
+        .verdict-real {
+            background: #DCFCE7;
+            color: #166534;
+            border: 1px solid #86EFAC;
+        }
+
+        .verdict-fake {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+
+        .confidence-box {
+            text-align: right;
+        }
+
+        .confidence-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #0F172A;
+        }
+
+        .confidence-lbl {
+            display: block;
+            font-size: 0.7rem;
+            color: #64748B;
+            text-transform: uppercase;
+        }
+
+        /* Section Headings */
+        .section-title {
+            font-size: 0.88rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #0F172A;
+            border-bottom: 1px solid #E2E8F0;
+            padding-bottom: 6px;
+            margin: 18px 0 10px;
+        }
+
+        .input-excerpt {
+            background: #F1F5F9;
+            border-left: 3px solid #3B82F6;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            color: #1E293B;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+
+        /* Tables */
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            margin-bottom: 16px;
+        }
+
+        .report-table th, .report-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .report-table th {
+            background: #F8FAFC;
+            font-weight: 700;
+            color: #475569;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .badge-polar {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .badge-real { background: #DCFCE7; color: #166534; }
+        .badge-fake { background: #FEE2E2; color: #991B1B; }
+
+        /* Sources */
+        .source-row {
+            padding: 8px 10px;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+
+        .source-name {
+            font-weight: 700;
+            color: #1E293B;
+        }
+
+        .source-url {
+            color: #2563EB;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+        }
+
+        /* Wikipedia Grounding */
+        .wiki-box {
+            background: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            font-size: 0.82rem;
+        }
+
+        .wiki-title {
+            font-weight: 700;
+            color: #1E40AF;
+        }
+
+        /* Sign-off / Disclaimer */
+        .report-footer {
+            margin-top: 24px;
+            padding-top: 14px;
+            border-top: 1px solid #CBD5E1;
+            font-size: 0.72rem;
+            color: #64748B;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .seal-stamp {
+            border: 2px solid #0F172A;
+            padding: 6px 12px;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+            color: #0F172A;
+            border-radius: 4px;
+        }
+
+        .print-btn-bar {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-print {
+            background: #0F172A;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        @media print {
+            .print-btn-bar { display: none; }
+            body { padding: 0; }
+            .report-sheet { border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-btn-bar">
+        <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+
+    <div class="report-sheet">
+        <!-- Header -->
+        <header class="report-header">
+            <div class="header-title-block">
+                <h1>FACT-CHECK VERIFICATION CERTIFICATE</h1>
+                <p>AI-Based Fake News Detection &amp; Natural Language Processing System</p>
+            </div>
+            <div class="header-meta">
+                <strong>REPORT #{{ report_id }}</strong>
+                <span>{{ generated_at }}</span>
+            </div>
+        </header>
+
+        <!-- Executive Summary -->
+        <div class="summary-card">
+            <div>
+                <span class="verdict-tag {{ 'verdict-real' if prediction == 'REAL' else 'verdict-fake' }}">
+                    {{ '✓ VERIFIED REAL NEWS' if prediction == 'REAL' else '⚠ DETECTED FAKE NEWS' }}
+                </span>
+                <p style="margin-top: 6px; font-size: 0.82rem; color: #475569;">
+                    Model Architecture: <strong>{{ model_used }}</strong>
+                </p>
+            </div>
+            <div class="confidence-box">
+                <span class="confidence-lbl">Authenticity Confidence</span>
+                <span class="confidence-num">{{ confidence }}%</span>
+            </div>
+        </div>
+
+        <!-- Input Excerpt -->
+        <h2 class="section-title">1. Target Text Excerpt</h2>
+        <div class="input-excerpt">
+            "{{ input_text }}"
+        </div>
+
+        <!-- Linguistic & XAI Feature Evidence -->
+        <h2 class="section-title">2. Linguistic &amp; Semantic Evidence (Explainable AI)</h2>
+        <p style="font-size: 0.82rem; color: #475569; margin-bottom: 8px;">
+            {{ explanation }}
+        </p>
+
+        {% if feature_details and feature_details|length > 0 %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Detected Keyword</th>
+                    <th>Directional Polarity</th>
+                    <th>Model Impact Weight</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feat in feature_details[:6] %}
+                <tr>
+                    <td><strong>{{ feat.word }}</strong></td>
+                    <td>
+                        <span class="badge-polar {{ 'badge-real' if feat.direction == 'REAL' else 'badge-fake' }}">
+                            {{ feat.direction }}
+                        </span>
+                    </td>
+                    <td style="font-family: 'JetBrains Mono', monospace;">{{ feat.impact }} ({{ feat.score }})</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        <!-- Wikipedia Grounding -->
+        {% if wiki and wiki.is_grounded %}
+        <h2 class="section-title">3. Wikipedia Encyclopedic Knowledge Grounding</h2>
+        <div class="wiki-box">
+            <span class="wiki-title">📖 {{ wiki.entity }}</span>
+            <p style="font-weight: 600; color: #1E3A8A; margin: 2px 0;">{{ wiki.description }}</p>
+            <p style="color: #334155; font-size: 0.78rem;">{{ wiki.extract_snippet }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Live Web Sources -->
+        {% if live_sources and live_sources|length > 0 %}
+        <h2 class="section-title">4. Real-World News Corroboration</h2>
+        {% for src in live_sources[:4] %}
+        <div class="source-row">
+            <div>
+                <span class="source-name">{{ src.source }}</span> — <span>{{ src.title }}</span>
+            </div>
+            <span class="source-url">{{ src.published_at }}</span>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Fact Check Ratings -->
+        {% if fact_checks and fact_checks|length > 0 %}
+        <h2 class="section-title">5. Independent Fact-Checker Reviews</h2>
+        {% for fc in fact_checks[:3] %}
+        <div class="source-row" style="background: #FEF2F2; border-color: #FECDD3;">
+            <div>
+                <strong>{{ fc.publisher }}:</strong> {{ fc.claim }}
+            </div>
+            <strong style="color: #991B1B;">Rating: {{ fc.rating }}</strong>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Footer / Academic Certification -->
+        <footer class="report-footer">
+            <div>
+                <p><strong>Methodology:</strong> 3-Fold Stratified Cross-Validation + Platt Probability Calibration.</p>
+                <p>Academic NLP Micro-Project • Dataset: 12,736 Balanced Articles • SHA256 Verified</p>
+            </div>
+            <div class="seal-stamp">
+                AI VERIFIED
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

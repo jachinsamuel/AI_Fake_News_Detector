@@ -170,6 +170,35 @@ def scrape_url():
         }), 400
 
 
+@app.route("/export-report", methods=["POST"])
+def export_report():
+    """Render formal print-ready fact-check verification certificate / report."""
+    data = request.get_json(silent=True) or {}
+    import random
+    report_id = f"FND-2026-{random.randint(10000, 99999)}"
+    generated_at = time.strftime("%B %d, %Y • %H:%M:%S UTC")
+    
+    web_data = data.get("web_verification") or {}
+    wiki_data = web_data.get("wikipedia_grounding") or {}
+    live_sources = web_data.get("live_sources") or []
+    fact_checks = web_data.get("fact_checks") or []
+
+    return render_template(
+        "report_template.html",
+        report_id=report_id,
+        generated_at=generated_at,
+        prediction=data.get("prediction", "UNKNOWN"),
+        confidence=data.get("confidence", 0.0),
+        model_used=data.get("model", "Soft-Voting Ensemble"),
+        input_text=data.get("input_text", ""),
+        explanation=data.get("explanation", ""),
+        feature_details=data.get("feature_details", []),
+        wiki=wiki_data,
+        live_sources=live_sources,
+        fact_checks=fact_checks
+    )
+
+
 @app.route("/api/metrics", methods=["GET"])
 def get_metrics():
     """Return model performance comparison metrics and training statistics."""

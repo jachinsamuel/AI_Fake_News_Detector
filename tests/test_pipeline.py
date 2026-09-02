@@ -184,6 +184,23 @@ class TestFlaskAPI(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_export_report_route(self):
+        payload = {
+            "prediction": "REAL",
+            "confidence": 98.2,
+            "model": "Soft-Voting Ensemble",
+            "input_text": "Sample verified news",
+            "explanation": "Verified on web",
+            "feature_details": [{"word": "sample", "direction": "REAL", "impact": "High", "score": "+1.0"}]
+        }
+        response = self.client.post(
+            "/export-report",
+            data=json.dumps(payload),
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"FACT-CHECK VERIFICATION CERTIFICATE", response.data)
+
 
 class TestWebVerifierAndKnowledgeGrounding(unittest.TestCase):
     """Test AI Live Web Verification agent and Wikipedia Grounding."""

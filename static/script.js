@@ -54,6 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const telemetryLatency = document.getElementById("telemetry-latency");
     const telemetryCache = document.getElementById("telemetry-cache");
+    const exportPdfBtn = document.getElementById("export-pdf-btn");
+
+    let lastAnalysisData = null;
 
     // 1. Mode Switcher
     tabText.addEventListener("click", () => {
@@ -343,9 +346,50 @@ document.addEventListener("DOMContentLoaded", () => {
             telemetryCache.classList.add("hidden");
         }
 
+        // Store for PDF export
+        lastAnalysisData = {
+            ...data,
+            input_text: newsInput.value.trim()
+        };
+
         // Reveal card
         resultCard.classList.remove("hidden");
         resultCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    // 7. Export Formal Fact-Check PDF Report
+    if (exportPdfBtn) {
+        exportPdfBtn.addEventListener("click", async () => {
+            if (!lastAnalysisData) {
+                showError("Please analyze a news claim first before exporting a report.");
+                return;
+            }
+
+            try {
+                const resp = await fetch("/export-report", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(lastAnalysisData)
+                });
+
+                if (!resp.ok) {
+                    showError("Could not generate report from server.");
+                    return;
+                }
+
+                const html = await resp.text();
+                const printWindow = window.open("", "_blank");
+                if (printWindow) {
+                    printWindow.document.open();
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                } else {
+                    showError("Popup blocked. Please allow popups to open and print the PDF report.");
+                }
+            } catch (err) {
+                showError("Failed to generate fact-check certificate.");
+            }
+        });
     }
 
     function setLoading(isLoading) {
