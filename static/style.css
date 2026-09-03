@@ -149,10 +149,10 @@ body {
     margin-bottom: 10px;
 }
 
-.header-left-group {
+.header-right-group {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .card-header label {
@@ -161,36 +161,42 @@ body {
     color: var(--text-main);
 }
 
-.btn-voice {
-    background-color: #F1F5F9;
+.btn-voice-icon {
+    background: transparent;
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--text-main);
-    cursor: pointer;
+    width: 28px;
+    height: 28px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    color: var(--text-muted);
+    cursor: pointer;
     transition: all 0.15s ease;
+    padding: 0;
 }
 
-.btn-voice:hover {
-    background-color: #E2E8F0;
+.btn-voice-icon:hover {
+    background-color: #F1F5F9;
+    color: var(--text-main);
     border-color: #CBD5E1;
 }
 
-.btn-voice.listening {
+.btn-voice-icon.listening {
     background-color: #FEE2E2;
     border-color: #FCA5A5;
-    color: #991B1B;
+    color: #DC2626;
     animation: pulseRecording 1.2s infinite;
+}
+
+.mic-svg {
+    display: block;
+    stroke: currentColor;
 }
 
 @keyframes pulseRecording {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.03); }
+    50% { transform: scale(1.08); }
 }
 
 .voice-status-banner {

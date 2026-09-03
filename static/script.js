@@ -77,8 +77,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         recognition.onstart = () => {
             isRecording = true;
-            if (voiceBtn) voiceBtn.classList.add("listening");
-            if (voiceBtnText) voiceBtnText.textContent = "Listening...";
+            if (voiceBtn) {
+                voiceBtn.classList.add("listening");
+                voiceBtn.title = "Listening... Click to stop";
+            }
             if (voiceStatusBanner) voiceStatusBanner.classList.remove("hidden");
         };
 
@@ -123,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
         isRecording = false;
         if (voiceBtn) {
             voiceBtn.classList.remove("listening");
-            voiceBtnText.textContent = "Voice Input";
+            voiceBtn.title = "Dictate headline via microphone";
         }
         if (voiceStatusBanner) {
             voiceStatusBanner.classList.add("hidden");

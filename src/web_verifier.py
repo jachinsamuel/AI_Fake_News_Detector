@@ -30,12 +30,23 @@ from src.config import (
 
 # Major reputable journalistic domains for trust scoring
 CREDIBLE_DOMAINS = [
+    # Global news wires & broadcasters
     "reuters.com", "apnews.com", "bbc.com", "bbc.co.uk", "nytimes.com",
     "washingtonpost.com", "wsj.com", "bloomberg.com", "theguardian.com",
     "cnn.com", "nbcnews.com", "cbsnews.com", "abcnews.go.com", "npr.org",
     "politico.com", "snopes.com", "politifact.com", "factcheck.org", "nature.com",
-    "sciencemag.org", "nasa.gov", "who.int", "cdc.gov", "dw.com", "thehindu.com",
-    "ndtv.com", "indianexpress.com", "wikipedia.org"
+    "sciencemag.org", "nasa.gov", "who.int", "cdc.gov", "dw.com", "aljazeera.com",
+    "france24.com", "time.com", "forbes.com", "ft.com", "economist.com",
+    
+    # Major Indian & Asian English Dailies / Wires
+    "thehindu.com", "thehindu.co.in", "thehindu", "ndtv.com", "ndtv",
+    "indianexpress.com", "timesofindia.indiatimes.com", "indiatimes.com",
+    "hindustantimes.com", "freepressjournal.in", "freepressjournal.com", "freepressjournal",
+    "livemint.com", "moneycontrol.com", "news18.com", "indiatoday.in", "indiatoday",
+    "deccanherald.com", "tribuneindia.com", "ani.in", "aninews.in", "ptinews.com",
+    "financialexpress.com", "businesstoday.in", "theprint.in", "thewire.in",
+    "scroll.in", "firstpost.com", "wionews.com", "outlookindia.com",
+    "telegraphindia.com", "business-standard.com", "wikipedia.org"
 ]
 
 DEATH_TERMS = {
@@ -402,12 +413,13 @@ def verify_article_on_web(text: str) -> dict:
         verdict = "GROUNDED_BY_WIKIPEDIA_AND_NEWS" if has_relevant_news else "GROUNDED_BY_WIKIPEDIA"
         desc = wiki_grounding.get("description") or "verified encyclopedic entry"
         summary = f"Grounded in verified world knowledge: {wiki_grounding['entity']} ({desc})."
-    elif has_relevant_news and credible_matches > 0:
-        verdict = "CORROBORATED_BY_LIVE_NEWS"
-        summary = f"Corroborating coverage confirmed across {len(relevant_sources)} live news sources including {relevant_sources[0]['source']}."
     elif has_relevant_news:
-        verdict = "MATCHING_NEWS_FOUND"
-        summary = f"Found {len(relevant_sources)} related articles reporting on this topic on the live web."
+        verdict = "CORROBORATED_BY_LIVE_NEWS"
+        lead_src = relevant_sources[0]['source']
+        if len(relevant_sources) > 1:
+            summary = f"Corroborating coverage confirmed across {len(relevant_sources)} live news sources including {lead_src}."
+        else:
+            summary = f"Corroborating coverage confirmed on the live web by {lead_src}."
     else:
         verdict = "NO_LIVE_COVERAGE"
         summary = "No active reporting found on major live news feeds. Likely an unverified claim, rumor, or historical text."

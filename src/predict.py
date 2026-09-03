@@ -172,18 +172,15 @@ class FakeNewsPredictor:
                         wiki_desc = web_info["wikipedia_grounding"].get("description") or "verified encyclopedic entry"
                         final_explanation = f"Authoritatively grounded in verified world knowledge: {web_info['wikipedia_grounding']['entity']} ({wiki_desc})."
 
-                    # Case 4: Corroborated by live credible news organizations (Bloomberg, NYT, BBC, Reuters, DW)
-                    elif web_info.get("credible_sources_count", 0) >= 1 or web_info.get("web_verdict") == "CORROBORATED_BY_LIVE_NEWS":
+                    # Case 4: Corroborated by live news coverage on news wires
+                    elif web_info.get("credible_sources_count", 0) >= 1 or web_info.get("web_verdict") == "CORROBORATED_BY_LIVE_NEWS" or web_info.get("sources_count", 0) >= 1:
                         final_prediction = "REAL"
                         final_confidence = round(min(97.5, max(confidence_pct + 42.0, 93.8)), 2)
                         lead_source = web_info["live_sources"][0]["source"] if web_info.get("live_sources") else "Verified News Wires"
-                        final_explanation = f"Corroborated by live news coverage across {len(web_info.get('live_sources', []))} major news sources including {lead_source}."
-
-                    # Case 5: Multiple matching live articles found
-                    elif web_info.get("sources_count", 0) >= 2:
-                        final_prediction = "REAL"
-                        final_confidence = round(min(94.0, max(confidence_pct + 32.0, 88.5)), 2)
-                        final_explanation = f"Corroborating reporting found across {web_info['sources_count']} active web news articles."
+                        if len(web_info.get("live_sources", [])) > 1:
+                            final_explanation = f"Corroborated by live news coverage across {len(web_info.get('live_sources', []))} major news sources including {lead_source}."
+                        else:
+                            final_explanation = f"Corroborated by live news reporting from {lead_source}."
 
                     # Case 6: Short text without live web reporting
                     elif word_count <= 25 and web_info.get("sources_count", 0) == 0 and not web_info.get("fact_checks"):

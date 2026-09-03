@@ -19,9 +19,6 @@
                 <div class="brand">
                     <span class="brand-name">Fake News Detector</span>
                 </div>
-                <div class="nav-badges">
-                    <span class="badge-pill" id="badge-ensemble">Ensemble ML &amp; Live Web AI</span>
-                </div>
             </div>
         </header>
 
@@ -44,17 +41,20 @@
                 <!-- Text Input Panel -->
                 <div id="panel-text" class="input-panel">
                     <div class="card-header">
-                        <div class="header-left-group">
-                            <label for="news-input">News Article or Headline</label>
-                            <button type="button" id="voice-btn" class="btn-voice" title="Click to speak or dictate news headline">
-                                <span class="mic-icon">🎙️</span>
-                                <span id="voice-btn-text">Voice Input</span>
+                        <label for="news-input">News Article or Headline</label>
+                        <div class="header-right-group">
+                            <button type="button" id="voice-btn" class="btn-voice-icon" title="Dictate headline via microphone" aria-label="Voice Input">
+                                <svg class="mic-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" x2="12" y1="19" y2="22"></line>
+                                </svg>
                             </button>
-                        </div>
-                        <div class="counter">
-                            <span id="word-count">0 words</span>
-                            <span class="sep">•</span>
-                            <span id="char-count">0 characters</span>
+                            <div class="counter">
+                                <span id="word-count">0 words</span>
+                                <span class="sep">•</span>
+                                <span id="char-count">0 characters</span>
+                            </div>
                         </div>
                     </div>
 

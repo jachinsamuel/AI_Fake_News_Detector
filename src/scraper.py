@@ -68,13 +68,20 @@ def scrape_article_from_url(url: str, timeout_seconds: int = 8) -> dict:
     source = parsed.netloc.replace("www.", "")
 
     # 3. Extract Main Body Paragraphs
+    boilerplate_regex = re.compile(
+        r"cookie|privacy policy|rights reserved|subscribe|commenting policy|leave a comment|"
+        r"post a comment|user agreement|terms of service|epaper|download our app|"
+        r"sign in to|please do not use abbreviations|read our commenting policy",
+        re.I
+    )
+
     paragraphs = []
     # Check for <article> wrapper first
     article_container = soup.find("article") or soup.find("main") or soup
     for p in article_container.find_all("p"):
         text = p.get_text().strip()
-        # Filter out short cookie notices, social sharing links, and captions
-        if len(text) > 40 and not re.search(r"cookie|privacy policy|rights reserved|subscribe", text, re.I):
+        # Filter out short notices, cookie notices, and comment rules
+        if len(text) > 40 and not boilerplate_regex.search(text):
             paragraphs.append(text)
 
     full_text = " ".join(paragraphs)
@@ -82,7 +89,7 @@ def scrape_article_from_url(url: str, timeout_seconds: int = 8) -> dict:
         # Fallback to general paragraph collection
         for p in soup.find_all("p"):
             text = p.get_text().strip()
-            if len(text) > 40:
+            if len(text) > 40 and not boilerplate_regex.search(text):
                 paragraphs.append(text)
         full_text = " ".join(paragraphs)
 
