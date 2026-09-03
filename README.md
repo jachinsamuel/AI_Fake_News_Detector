@@ -6,6 +6,8 @@ An end-to-end Machine Learning and Natural Language Processing (NLP) system comb
 
 ## Key Features
 
+* **Live Voice / Speech-to-Text News Analyzer:** Built-in microphone dictation utilizing the Web Speech API with real-time transcription and automatic speech-to-verification workflows.
+* **1-Click Formal Fact-Check PDF Report:** Generates an official, print-ready Fact-Check Verification Certificate complete with unique Report ID, confidence metrics, XAI linguistic table, Wikipedia grounding, and live news citations.
 * **Multi-Domain Dataset (12,736 Articles):** Consolidated and balanced across McIntire News, FakeNewsNet PolitiFact, and FakeNewsNet GossipCop datasets.
 * **Soft-Voting Ensemble Model:** Combines **Linear SVM (Platt Calibrated)**, **Logistic Regression**, and **Multinomial Naive Bayes** via soft-voting probability aggregation for lower variance and higher generalization.
 * **Live AI Web Verification & Multi-API Parallelism:** Uses `ThreadPoolExecutor` to concurrently query **NewsAPI**, **Google Fact Check Tools API**, **GNews API**, and **Google News RSS** in under 1.5 seconds.

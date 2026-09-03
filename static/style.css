@@ -149,10 +149,91 @@ body {
     margin-bottom: 10px;
 }
 
+.header-left-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .card-header label {
     font-size: 0.85rem;
     font-weight: 700;
     color: var(--text-main);
+}
+
+.btn-voice {
+    background-color: #F1F5F9;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+}
+
+.btn-voice:hover {
+    background-color: #E2E8F0;
+    border-color: #CBD5E1;
+}
+
+.btn-voice.listening {
+    background-color: #FEE2E2;
+    border-color: #FCA5A5;
+    color: #991B1B;
+    animation: pulseRecording 1.2s infinite;
+}
+
+@keyframes pulseRecording {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+}
+
+.voice-status-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    color: #1E40AF;
+    margin-bottom: 10px;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #EF4444;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    animation: blinkDot 0.8s infinite alternate;
+}
+
+@keyframes blinkDot {
+    from { opacity: 0.3; }
+    to { opacity: 1; }
+}
+
+.btn-voice-stop {
+    background-color: #1E40AF;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-voice-stop:hover {
+    background-color: #1E3A8A;
 }
 
 .counter {

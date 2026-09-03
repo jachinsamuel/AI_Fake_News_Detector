@@ -56,7 +56,104 @@ document.addEventListener("DOMContentLoaded", () => {
     const telemetryCache = document.getElementById("telemetry-cache");
     const exportPdfBtn = document.getElementById("export-pdf-btn");
 
+    // Voice & Speech Recognition Elements
+    const voiceBtn = document.getElementById("voice-btn");
+    const voiceBtnText = document.getElementById("voice-btn-text");
+    const voiceStatusBanner = document.getElementById("voice-status-banner");
+    const stopVoiceBtn = document.getElementById("stop-voice-btn");
+
     let lastAnalysisData = null;
+
+    // Speech-to-Text Recognition Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isRecording = false;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+
+        recognition.onstart = () => {
+            isRecording = true;
+            if (voiceBtn) voiceBtn.classList.add("listening");
+            if (voiceBtnText) voiceBtnText.textContent = "Listening...";
+            if (voiceStatusBanner) voiceStatusBanner.classList.remove("hidden");
+        };
+
+        recognition.onresult = (event) => {
+            let transcript = "";
+            for (let i = 0; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            newsInput.value = transcript;
+            updateTextStats();
+        };
+
+        recognition.onerror = (event) => {
+            console.warn("Speech recognition error:", event.error);
+            if (event.error === "not-allowed") {
+                showError("Microphone permission was denied. Please allow microphone access in your browser settings.");
+            } else if (event.error !== "no-speech") {
+                showError(`Speech notice: ${event.error}`);
+            }
+            stopVoiceRecording(false);
+        };
+
+        recognition.onend = () => {
+            stopVoiceRecording(false);
+        };
+    }
+
+    function startVoiceRecording() {
+        if (!recognition) {
+            showError("Speech recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.");
+            return;
+        }
+        hideError();
+        try {
+            recognition.start();
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+
+    function stopVoiceRecording(autoAnalyze = false) {
+        isRecording = false;
+        if (voiceBtn) {
+            voiceBtn.classList.remove("listening");
+            voiceBtnText.textContent = "Voice Input";
+        }
+        if (voiceStatusBanner) {
+            voiceStatusBanner.classList.add("hidden");
+        }
+        if (recognition) {
+            try {
+                recognition.stop();
+            } catch (e) {}
+        }
+
+        if (autoAnalyze && newsInput.value.trim().length > 10) {
+            analyzeText();
+        }
+    }
+
+    if (voiceBtn) {
+        voiceBtn.addEventListener("click", () => {
+            if (isRecording) {
+                stopVoiceRecording(true);
+            } else {
+                startVoiceRecording();
+            }
+        });
+    }
+
+    if (stopVoiceBtn) {
+        stopVoiceBtn.addEventListener("click", () => {
+            stopVoiceRecording(true);
+        });
+    }
 
     // 1. Mode Switcher
     tabText.addEventListener("click", () => {

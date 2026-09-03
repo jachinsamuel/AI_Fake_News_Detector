@@ -44,7 +44,13 @@
                 <!-- Text Input Panel -->
                 <div id="panel-text" class="input-panel">
                     <div class="card-header">
-                        <label for="news-input">News Article or Headline</label>
+                        <div class="header-left-group">
+                            <label for="news-input">News Article or Headline</label>
+                            <button type="button" id="voice-btn" class="btn-voice" title="Click to speak or dictate news headline">
+                                <span class="mic-icon">🎙️</span>
+                                <span id="voice-btn-text">Voice Input</span>
+                            </button>
+                        </div>
                         <div class="counter">
                             <span id="word-count">0 words</span>
                             <span class="sep">•</span>
@@ -52,9 +58,16 @@
                         </div>
                     </div>
 
+                    <!-- Voice Recording Active Banner -->
+                    <div id="voice-status-banner" class="voice-status-banner hidden">
+                        <span class="pulse-dot"></span>
+                        <span id="voice-status-text">Listening... Speak clearly into your microphone</span>
+                        <button type="button" id="stop-voice-btn" class="btn-voice-stop">Stop &amp; Analyze</button>
+                    </div>
+
                     <textarea 
                         id="news-input" 
-                        placeholder="Enter or paste article text here..." 
+                        placeholder="Enter or paste article text here, or click 'Voice Input' to speak..." 
                         rows="7"
                     ></textarea>
                 </div>
