@@ -151,8 +151,15 @@ class FakeNewsPredictor:
             try:
                 web_info = verify_article_on_web(raw_text_stripped)
                 if web_info and web_info.get("status") == "SUCCESS":
+                    # Case 0: Verified or Contradicted by World GK Knowledge Graph
+                    if web_info.get("gk_info"):
+                        gk = web_info["gk_info"]
+                        final_prediction = gk["verdict"]
+                        final_confidence = gk["confidence"]
+                        final_explanation = gk["explanation"]
+
                     # Case 1: Debunked by independent fact-checkers (Snopes/PolitiFact/Reuters)
-                    if web_info.get("is_debunked"):
+                    elif web_info.get("is_debunked"):
                         final_prediction = "FAKE"
                         final_confidence = round(max(confidence_pct, 95.5), 2)
                         publisher = web_info["fact_checks"][0]["publisher"]
