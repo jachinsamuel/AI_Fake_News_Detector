@@ -240,13 +240,12 @@ def verify_world_gk_claim(text: str) -> dict:
                 c_extract = c_data.get("extract", "")[:250].lower()
                 desc_all = c_desc + " " + c_extract
                 
-                # Check for explicit national capital pattern (excluding financial/cultural/commercial capital)
-                cap_pattern = rf"(?<!financial\s)(?<!cultural\s)(?<!commercial\s)(?<!entertainment\s)\bcapital\s+(?:city\s+)?of\s+{re.escape(country.lower())}\b"
-                is_national_capital = (
-                    f"capital city of {country.lower()}" in desc_all
-                    or f"capital of {country.lower()}" in c_desc
-                    or bool(re.search(cap_pattern, desc_all))
-                )
+                # Negative check: if it specifies capital of a state/province/region
+                is_subnational = bool(re.search(r"\bcapital\s+(?:city\s+)?of\s+(?:the\s+)?(?:state|province|region|prefecture|department)\b", desc_all))
+                
+                # Check for national capital pattern across countries (e.g. 'capital of Japan', 'capital and most populous city of Japan')
+                cap_pattern = rf"(?<!financial\s)(?<!cultural\s)(?<!commercial\s)\bcapital\b(?:(?!\bstate\b|\bprovince\b).){{0,45}}\b(?:of|in)\s+{re.escape(country.lower())}\b"
+                is_national_capital = not is_subnational and bool(re.search(cap_pattern, desc_all))
                 
                 if is_national_capital:
                     return {
