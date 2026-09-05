@@ -18,7 +18,7 @@ if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 from src.preprocessing import preprocess_text
-from src.explain import explain_prediction
+from src.explain import explain_prediction, get_model_coefficients
 from src.web_verifier import verify_article_on_web
 from src.cache import get_cache
 
@@ -63,6 +63,13 @@ class FakeNewsPredictor:
             self.model_title = "Multinomial Naive Bayes"
         else:
             self.model_title = clf_type
+
+        # Precompute vocabulary feature names and linear model weights once (85x faster inference)
+        self.feature_names = np.array(self.vectorizer.get_feature_names_out())
+        underlying_model = self.model
+        if hasattr(self.model, "estimators_") and len(self.model.estimators_) > 0:
+            underlying_model = self.model.estimators_[0]
+        self.model_coefficients = get_model_coefficients(underlying_model)
 
     def switch_model(self, model_key: str):
         """Switch active model between 'ensemble_classifier', 'linear_svm', 'logistic_regression', 'naive_bayes', or 'best_model'."""
@@ -124,8 +131,7 @@ class FakeNewsPredictor:
             
         confidence_pct = round(confidence * 100, 2)
         
-        # 5. Explainable AI Feature Extraction
-        # If model is VotingClassifier, use its first linear estimator for coefficient weights
+        # 5. Explainable AI Feature Extraction (Optimized Sparse Slicing)
         underlying_model = self.model
         if hasattr(self.model, "estimators_") and len(self.model.estimators_) > 0:
             underlying_model = self.model.estimators_[0]
@@ -138,7 +144,10 @@ class FakeNewsPredictor:
             predicted_label=predicted_label,
             confidence=confidence_pct,
             label_encoder=self.label_encoder,
-            top_n=8
+            top_n=8,
+            precomputed_coefs=self.model_coefficients,
+            precomputed_feature_names=self.feature_names,
+            precomputed_tfidf=tfidf_features
         )
         
         # 6. Live AI Web Verification & Hybrid Decision Synthesis

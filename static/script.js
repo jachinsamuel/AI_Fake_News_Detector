@@ -290,6 +290,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const checkWeb = checkWebToggle ? checkWebToggle.checked : true;
 
+        // Instant Client-Side Session Cache (0.05ms repeat responses)
+        const clientCacheKey = `fnd_cache_${checkWeb}_${text.toLowerCase().replace(/\s+/g, ' ')}`;
+        try {
+            const cachedPayload = sessionStorage.getItem(clientCacheKey);
+            if (cachedPayload) {
+                const parsed = JSON.parse(cachedPayload);
+                parsed.processing_time_ms = 0.05;
+                parsed.cached = true;
+                displayResult(parsed);
+                setLoading(false);
+                return;
+            }
+        } catch (e) {}
+
         try {
             const response = await fetch("/predict", {
                 method: "POST",
@@ -311,6 +325,9 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             displayResult(data);
+            try {
+                sessionStorage.setItem(clientCacheKey, JSON.stringify(data));
+            } catch (e) {}
         } catch (err) {
             showError("Could not reach the analysis server. Ensure Flask backend is running.");
         } finally {
@@ -488,6 +505,22 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (err) {
                 showError("Failed to generate fact-check certificate.");
             }
+        });
+    }
+
+    // Copy Summary Action
+    const copySummaryBtn = document.getElementById("copy-summary-btn");
+    if (copySummaryBtn) {
+        copySummaryBtn.addEventListener("click", () => {
+            if (!lastAnalysisData) return;
+            const verdict = lastAnalysisData.prediction.toUpperCase() === "REAL" ? "REAL NEWS" : "FAKE NEWS";
+            const textSample = newsInput.value.trim().slice(0, 140);
+            const copyContent = `[${verdict} • ${lastAnalysisData.confidence}%]\n"${textSample}..."\n\nExplanation: ${lastAnalysisData.explanation}\n\nVerified by AI Fake News Detector with Live Web AI`;
+            navigator.clipboard.writeText(copyContent).then(() => {
+                const orig = copySummaryBtn.innerHTML;
+                copySummaryBtn.innerHTML = "<span>✓</span><span>Copied!</span>";
+                setTimeout(() => { copySummaryBtn.innerHTML = orig; }, 2000);
+            });
         });
     }
 

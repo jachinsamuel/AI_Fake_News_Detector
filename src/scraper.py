@@ -29,24 +29,19 @@ def scrape_article_from_url(url: str, timeout_seconds: int = 8) -> dict:
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/120.0.0.0 Safari/537.36"
+            "Chrome/124.0.0.0 Safari/537.36"
         ),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.5"
     }
 
-    req = urllib.request.Request(cleaned_url, headers=headers)
-    with urllib.request.urlopen(req, timeout=timeout_seconds) as response:
-        content_type = response.headers.get("Content-Type", "").lower()
-        if "text/html" not in content_type and "application/xhtml" not in content_type:
-            raise ValueError("The provided URL does not return an HTML web page.")
-        html_bytes = response.read(1024 * 1024)  # Read up to 1MB
-        encoding = response.headers.get_content_charset() or "utf-8"
-        try:
-            html = html_bytes.decode(encoding, errors="replace")
-        except Exception:
-            html = html_bytes.decode("utf-8", errors="replace")
+    import requests
+    response = requests.get(cleaned_url, headers=headers, timeout=timeout_seconds, allow_redirects=True)
+    content_type = response.headers.get("Content-Type", "").lower()
+    if "text/html" not in content_type and "application/xhtml" not in content_type and "application/xml" not in content_type:
+        raise ValueError("The provided URL does not return an HTML web page.")
 
+    html = response.text
     soup = BeautifulSoup(html, "html.parser")
 
     # Remove script, style, navigation, footer, and iframe tags

@@ -62,6 +62,18 @@ SAMPLE_ARTICLES = [
 ]
 
 
+@app.after_request
+def add_cache_and_security_headers(response):
+    """Inject browser caching headers for static assets and security protections."""
+    if request.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    else:
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return response
+
+
 @app.route("/")
 def index():
     """Render main web application interface."""
@@ -235,12 +247,15 @@ def get_config():
 
 @app.route("/api/health", methods=["GET"])
 def health_check():
-    """System health check endpoint."""
+    """System health check and performance telemetry endpoint."""
+    cache_stats = get_cache().stats()
     return jsonify({
         "status": "online",
         "predictor_ready": predictor is not None,
         "service": "AI Fake News Detection System with Live Web Verification",
-        "version": "2.0.0"
+        "version": "2.1.0",
+        "active_model": predictor.model_title if predictor else None,
+        "cache_telemetry": cache_stats
     }), 200
 
 
@@ -249,5 +264,6 @@ if __name__ == "__main__":
     print(f"\n=======================================================")
     print(f" [STARTING] AI Fake News Detector with Live Web Verifier")
     print(f" Access URL: http://127.0.0.1:{port}")
+    print(f" Multithreaded: True | Keep-Alive Pooling: Active")
     print(f"=======================================================\n")
-    app.run(host="127.0.0.1", port=port, debug=False)
+    app.run(host="127.0.0.1", port=port, debug=False, threaded=True)

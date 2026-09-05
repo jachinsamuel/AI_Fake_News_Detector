@@ -753,6 +753,27 @@ textarea::placeholder {
     font-size: 1rem;
 }
 
+.btn-copy-summary {
+    background-color: #F8FAFC;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.btn-copy-summary:hover {
+    background-color: #FFFFFF;
+    border-color: #64748B;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
 /* Telemetry Footer */
 .result-telemetry {
     display: flex;

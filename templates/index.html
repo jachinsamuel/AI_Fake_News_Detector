@@ -7,6 +7,8 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://en.wikipedia.org">
+    <link rel="dns-prefetch" href="https://news.google.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -187,6 +189,10 @@
 
                 <!-- Result Actions Bar & Telemetry Footer -->
                 <div class="result-actions-bar">
+                    <button type="button" id="copy-summary-btn" class="btn-copy-summary" title="Copy fact-check summary to clipboard">
+                        <span>📋</span>
+                        <span>Copy Summary</span>
+                    </button>
                     <button type="button" id="export-pdf-btn" class="btn-export">
                         <span class="export-icon">📄</span>
                         <span>Export Formal Fact-Check Report (PDF)</span>
