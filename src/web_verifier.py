@@ -77,6 +77,96 @@ RE_INCUMBENT_PATTERNS = [
     re.compile(r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\s+assumed\s+office")
 ]
 
+RE_CEO_P1 = re.compile(
+    r'(?:^|\b)(?:that\s+)?([a-zA-Z\s]+?)\s+(?:is|was|became)\s+(?:the\s+)?'
+    r'(ceo|chief\s+executive(?:\s+officer)?|founder|co-founder|managing\s+director|chair(?:man)?|secretary-general|director-general|governor)\s+of\s+([a-zA-Z0-9\s]+?)(?:[.,;?!]|$)',
+    re.IGNORECASE
+)
+RE_CEO_P2 = re.compile(
+    r'(?:^|\b)(?:the\s+)?(ceo|chief\s+executive(?:\s+officer)?|founder|co-founder|managing\s+director|chair(?:man)?|secretary-general|director-general|governor)\s+of\s+([a-zA-Z0-9\s]+?)\s+(?:is|was|became)\s+([a-zA-Z\s]+?)(?:[.,;?!]|$)',
+    re.IGNORECASE
+)
+
+KNOWN_LEADERS = {
+    # Tech & Global Corporate
+    "apple": ("Tim Cook", "CEO of Apple Inc."),
+    "microsoft": ("Satya Nadella", "CEO of Microsoft"),
+    "google": ("Sundar Pichai", "CEO of Google and Alphabet"),
+    "alphabet": ("Sundar Pichai", "CEO of Alphabet and Google"),
+    "tesla": ("Elon Musk", "CEO of Tesla"),
+    "meta": ("Mark Zuckerberg", "CEO of Meta"),
+    "facebook": ("Mark Zuckerberg", "CEO of Meta"),
+    "nvidia": ("Jensen Huang", "CEO of Nvidia"),
+    "amazon": ("Andy Jassy", "CEO of Amazon"),
+    "openai": ("Sam Altman", "CEO of OpenAI"),
+    "spacex": ("Elon Musk", "CEO and Chief Engineer of SpaceX"),
+    "twitter": ("Linda Yaccarino", "CEO of X (formerly Twitter)"),
+    "x": ("Linda Yaccarino", "CEO of X"),
+    "tata sons": ("Natarajan Chandrasekaran", "Chairman of Tata Sons"),
+    "reliance": ("Mukesh Ambani", "Chairman and Managing Director of Reliance Industries"),
+    
+    # Global Governance & Finance
+    "united nations": ("António Guterres", "Secretary-General of the United Nations"),
+    "un": ("António Guterres", "Secretary-General of the United Nations"),
+    "world health organization": ("Tedros Adhanom Ghebreyesus", "Director-General of the World Health Organization"),
+    "who": ("Tedros Adhanom Ghebreyesus", "Director-General of the World Health Organization"),
+    "world bank": ("Ajay Banga", "President of the World Bank"),
+    "international monetary fund": ("Kristalina Georgieva", "Managing Director of the International Monetary Fund"),
+    "imf": ("Kristalina Georgieva", "Managing Director of the International Monetary Fund"),
+    "reserve bank of india": ("Shaktikanta Das", "Governor of the Reserve Bank of India"),
+    "rbi": ("Shaktikanta Das", "Governor of the Reserve Bank of India"),
+    "federal reserve": ("Jerome Powell", "Chair of the Federal Reserve"),
+    "fed": ("Jerome Powell", "Chair of the Federal Reserve")
+}
+
+SCIENTIFIC_CONSENSUS_DEBUNKS = [
+    (
+        re.compile(r"\b(?:earth\s+is\s+flat|flat\s+earth)\b", re.IGNORECASE),
+        "Scientific consensus confirms Earth is an oblate spheroid. Geodesy, satellite telemetry, and centuries of astronomical observation definitively refute the flat Earth myth."
+    ),
+    (
+        re.compile(r"\b(?:vaccines?\s+(?:cause|causes|lead to)\s+autism)\b", re.IGNORECASE),
+        "Thoroughly refuted medical disinformation. Dozens of global peer-reviewed clinical studies involving millions of children have found zero link between vaccines and autism."
+    ),
+    (
+        re.compile(r"\b(?:5g\s+(?:causes|spreads|towers\s+spread)\s+(?:coronavirus|covid))\b", re.IGNORECASE),
+        "Refuted conspiracy theory. Radio frequencies cannot transmit biological pathogens; the World Health Organization and IEEE confirm 5G is non-ionizing radiation."
+    ),
+    (
+        re.compile(r"\b(?:drinking\s+bleach|miracle\s+mineral\s+solution)\s+(?:cures?|treats?)\b", re.IGNORECASE),
+        "Dangerous health disinformation. CDC, FDA, and WHO warn that consuming bleach or industrial disinfectants causes severe chemical poisoning, organ failure, and death."
+    ),
+    (
+        re.compile(r"\b(?:moon\s+landing\s+(?:was\s+a\s+hoax|was\s+faked|never\s+happened))\b", re.IGNORECASE),
+        "Refuted historical conspiracy. The Apollo lunar landings are verified by retroreflector lasers, 382 kg of lunar rocks, and independent tracking by Soviet and global observatories."
+    ),
+    (
+        re.compile(r"\b(?:sun\s+revolves\s+around\s+(?:the\s+)?earth)\b", re.IGNORECASE),
+        "Factually incorrect. The heliocentric model of the Solar System definitively proves that Earth and other planets orbit the Sun."
+    ),
+    (
+        re.compile(r"\b(?:garlic|lemon\s+water|baking\s+soda|alkaline\s+water)\s+cures?\s+cancer\b", re.IGNORECASE),
+        "False medical claim. Oncological science and cancer research organizations confirm no single food or household item cures cancer."
+    ),
+]
+
+RE_REFUTATION_PATTERNS = [
+    re.compile(r"\b(?:fact[- ]check|factcheck|fact-checking|myth[- ]busting)\b", re.IGNORECASE),
+    re.compile(r"\b(?:debunk(?:ed|s|ing)?|hoax|fabricated|untrue|false claim|fake news)\b", re.IGNORECASE),
+    re.compile(r"\b(?:misleading|incorrect|unproven|baseless|unfounded|rumor|rumour)\b", re.IGNORECASE),
+    re.compile(r"\b(?:no evidence|not true|denies rumors?|dismisses rumors?|alive and well)\b", re.IGNORECASE),
+    re.compile(r"\b(?:did not (?:die|pass away|say|happen|occur|resign|step down))\b", re.IGNORECASE),
+    re.compile(r"\b(?:does not (?:cause|cure|work|kill|prevent|exist))\b", re.IGNORECASE),
+    re.compile(r"\b(?:is not (?:dead|arrested|true|real|stepping down|guilty))\b", re.IGNORECASE),
+    re.compile(r"\b(?:not the (?:president|prime minister|ceo|capital|founder))\b", re.IGNORECASE),
+    re.compile(r"\b(?:claim that .* is false|warning against fake)\b", re.IGNORECASE),
+]
+
+COMMON_STOPWORDS = {
+    "the", "a", "an", "is", "was", "are", "were", "in", "on", "at", "to", "for", "of", "and", "or",
+    "that", "this", "it", "with", "by", "from", "as", "be", "has", "have", "had", "not"
+}
+
 # Major reputable journalistic domains for trust scoring
 CREDIBLE_DOMAINS = [
     # Global news wires & broadcasters
@@ -162,12 +252,26 @@ def extract_potential_entities(text: str) -> list:
 def verify_world_gk_claim(text: str) -> dict:
     """
     Direct General Knowledge & World Factual Verification Engine.
-    Verifies claims about world leaders, heads of state, prime ministers, presidents, and national capitals
-    against the Wikipedia Knowledge Graph. Detects false factual claims like 'X is the president of Y'
-    or 'City is the capital of Country'. Uses connection pooling for ultra-fast (< 80ms) verification.
+    Verifies claims about world leaders, heads of state, prime ministers, presidents, tech CEOs,
+    established scientific consensus, and national capitals against the Wikipedia Knowledge Graph.
+    Detects false factual claims like 'X is the president of Y', 'City is the capital of Country',
+    or corporate claims like 'X is CEO of Y'. Uses connection pooling for ultra-fast (< 80ms) verification.
     """
     text_clean = text.strip()
     
+    # 0. Check Established Scientific & Medical Consensus Claims
+    for pat, explanation in SCIENTIFIC_CONSENSUS_DEBUNKS:
+        if pat.search(text_clean):
+            return {
+                "is_gk_claim": True,
+                "verdict": "FAKE",
+                "confidence": 99.2,
+                "office": "Scientific Consensus",
+                "person": "Scientific Fact-Checking",
+                "actual_incumbent": "Empirical Scientific Reality",
+                "explanation": f"Factually debunked by scientific consensus: {explanation}"
+            }
+
     # 1. Check Political Office Claim: '[Person] is [Office] of [Country]' or '[Office] of [Country] is [Person]'
     m1 = RE_OFFICE_P1.search(text_clean)
     m2 = RE_OFFICE_P2.search(text_clean)
@@ -307,6 +411,83 @@ def verify_world_gk_claim(text: str) -> dict:
                 "explanation": f"Factually false geographical claim. {city.title()} is not the capital of {country.title()}."
             }
 
+    # 3. Check Corporate / Institutional Leadership Claim: '[Person] is [Role] of [Company/Org]' or '[Role] of [Company/Org] is [Person]'
+    m_ceo1 = RE_CEO_P1.search(text_clean)
+    m_ceo2 = RE_CEO_P2.search(text_clean)
+    ceo_person = None
+    ceo_role = None
+    ceo_company = None
+
+    if m_ceo1:
+        ceo_person = m_ceo1.group(1).strip()
+        ceo_role = m_ceo1.group(2).strip().lower()
+        ceo_company = m_ceo1.group(3).strip()
+    elif m_ceo2:
+        ceo_role = m_ceo2.group(1).strip().lower()
+        ceo_company = m_ceo2.group(2).strip()
+        ceo_person = m_ceo2.group(3).strip()
+
+    if ceo_person and ceo_role and ceo_company:
+        if ceo_person.lower() in ("he", "she", "who", "someone", "anyone", "they"):
+            ceo_person = None
+
+    if ceo_person and ceo_role and ceo_company:
+        comp_key = ceo_company.lower().strip()
+        comp_norm = re.sub(r"\b(inc|corp|corporation|technologies|ltd|limited|llc|group)\b", "", comp_key).strip()
+        
+        known_match = None
+        for k, (act_person, act_role) in KNOWN_LEADERS.items():
+            if k == comp_key or k == comp_norm or comp_norm.startswith(k) or k.startswith(comp_norm):
+                known_match = (act_person, act_role)
+                break
+                
+        if known_match:
+            actual_person, actual_role = known_match
+            person_tokens = set(w.lower() for w in ceo_person.split())
+            actual_tokens = set(w.lower() for w in actual_person.split())
+            
+            if person_tokens.issubset(actual_tokens) or actual_tokens.issubset(person_tokens) or len(person_tokens.intersection(actual_tokens)) >= 1:
+                return {
+                    "is_gk_claim": True,
+                    "verdict": "REAL",
+                    "confidence": 98.8,
+                    "office": actual_role,
+                    "person": actual_person,
+                    "actual_incumbent": actual_person,
+                    "explanation": f"Authoritatively verified by corporate world knowledge: {actual_person} is the {actual_role}."
+                }
+            else:
+                return {
+                    "is_gk_claim": True,
+                    "verdict": "FAKE",
+                    "confidence": 98.2,
+                    "office": actual_role,
+                    "person": ceo_person.title(),
+                    "actual_incumbent": actual_person,
+                    "explanation": f"Factually incorrect corporate leadership claim. {actual_person} is the {actual_role}, not {ceo_person.title()}."
+                }
+        else:
+            # Dynamic fallback: query Wikipedia page for the organization
+            comp_slug = "_".join(w.capitalize() for w in ceo_company.split())
+            url_comp = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(comp_slug)}"
+            try:
+                resp_comp = _HTTP_SESSION.get(url_comp, timeout=2.5)
+                if resp_comp.status_code == 200:
+                    c_data = resp_comp.json()
+                    desc_all = (c_data.get("description", "") + " " + c_data.get("extract", "")[:350]).lower()
+                    if ceo_person.lower() in desc_all:
+                        return {
+                            "is_gk_claim": True,
+                            "verdict": "REAL",
+                            "confidence": 98.2,
+                            "office": f"{ceo_role.title()} of {ceo_company.title()}",
+                            "person": ceo_person.title(),
+                            "actual_incumbent": ceo_person.title(),
+                            "explanation": f"Authoritatively verified by world knowledge: {ceo_person.title()} is affiliated as {ceo_role.title()} of {ceo_company.title()}."
+                        }
+            except Exception:
+                pass
+
     return None
 
 
@@ -357,6 +538,24 @@ GOV_ACTION_TERMS = {
     "condolences", "mourns", "mourned", "grief", "grieves", "tribute", "relief",
     "orders", "meets", "urges", "directs", "tweets", "says", "speaks", "visits", "leads"
 }
+
+
+def check_headline_refutation(query_words: list, title: str) -> bool:
+    """
+    Determine if a headline is actively refuting, fact-checking, or debunking the query topic.
+    Prevents false corroboration when news articles are actively reporting a debunk or hoax.
+    """
+    title_lower = title.lower()
+    has_refute_pattern = any(p.search(title_lower) for p in RE_REFUTATION_PATTERNS)
+    if not has_refute_pattern:
+        return False
+        
+    content_words = [w.lower() for w in query_words if len(w) > 2 and w.lower() not in COMMON_STOPWORDS]
+    if not content_words:
+        return True
+    
+    matches = sum(1 for w in content_words if w in title_lower)
+    return matches >= max(1, len(content_words) // 2)
 
 
 def is_headline_semantically_relevant(query_words: list, title: str) -> bool:
@@ -600,20 +799,25 @@ def verify_article_on_web(text: str) -> dict:
         except Exception:
             wiki_grounding = None
 
-    # Filter semantically relevant headlines
+    # Filter semantically relevant headlines vs debunking refutations
     relevant_sources = []
+    debunking_sources = []
     seen_titles = set()
     for s in raw_sources:
         title = s.get("title", "")
-        if title not in seen_titles and is_headline_semantically_relevant(query_words, title):
+        if title not in seen_titles:
             seen_titles.add(title)
-            relevant_sources.append(s)
+            if check_headline_refutation(query_words, title):
+                debunking_sources.append(s)
+            elif is_headline_semantically_relevant(query_words, title):
+                relevant_sources.append(s)
 
     # Analyze Web Consensus
     has_fact_checks = len(fact_checks) > 0
     has_relevant_news = len(relevant_sources) > 0
+    has_debunking_news = len(debunking_sources) > 0
     
-    # Check if fact check debunked it
+    # Check if fact check or news debunked it
     is_debunked = False
     for fc in fact_checks:
         rating_lower = fc.get("rating", "").lower()
@@ -621,6 +825,9 @@ def verify_article_on_web(text: str) -> dict:
             is_debunked = True
             break
             
+    if not is_debunked and has_debunking_news:
+        is_debunked = True
+
     # Check credible domain matches
     credible_matches = sum(
         1 for src in relevant_sources
@@ -631,7 +838,13 @@ def verify_article_on_web(text: str) -> dict:
 
     if is_debunked:
         verdict = "DEBUNKED_BY_FACT_CHECKERS"
-        summary = f"Flagged and debunked by independent fact-checkers ({fact_checks[0]['publisher']}): rating '{fact_checks[0]['rating']}'."
+        if fact_checks:
+            summary = f"Flagged and debunked by independent fact-checkers ({fact_checks[0]['publisher']}): rating '{fact_checks[0]['rating']}'."
+        elif debunking_sources:
+            deb_src = debunking_sources[0]
+            summary = f"Actively debunked and refuted by news reporting ({deb_src.get('source', 'Fact Check')}): '{deb_src.get('title', '')}'."
+        else:
+            summary = "Flagged as debunked disinformation by verified news and fact-checking authorities."
     elif is_critical and not has_relevant_news:
         is_uncorroborated_hoax = True
         verdict = "UNCORROBORATED_CRITICAL_CLAIM"

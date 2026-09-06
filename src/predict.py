@@ -21,6 +21,7 @@ from src.preprocessing import preprocess_text
 from src.explain import explain_prediction, get_model_coefficients
 from src.web_verifier import verify_article_on_web
 from src.cache import get_cache
+from src.features import analyze_text_stylometry
 
 MODELS_DIR = os.path.join(ROOT_DIR, "models")
 
@@ -150,6 +151,19 @@ class FakeNewsPredictor:
             precomputed_tfidf=tfidf_features
         )
         
+        # 5.5 Forensic Stylometric Evaluation
+        stylometry_info = analyze_text_stylometry(raw_text_stripped)
+        is_clickbait = (
+            stylometry_info["sensationalism_level"] == "High" or
+            stylometry_info["style_verdict"] == "Sensationalist / Clickbait" or
+            stylometry_info["conspiracy_score"] > 0.25 or
+            (stylometry_info["punctuation_dramatism"] > 0.35 and stylometry_info["uppercase_ratio"] > 0.15)
+        )
+        has_journalistic_attribution = (
+            stylometry_info["attribution_score"] >= 0.2 and
+            stylometry_info["sensationalism_density"] < 0.1
+        )
+        
         # 6. Live AI Web Verification & Hybrid Decision Synthesis
         web_info = None
         final_prediction = predicted_label
@@ -167,13 +181,16 @@ class FakeNewsPredictor:
                         final_confidence = gk["confidence"]
                         final_explanation = gk["explanation"]
 
-                    # Case 1: Debunked by independent fact-checkers (Snopes/PolitiFact/Reuters)
+                    # Case 1: Debunked by independent fact-checkers or news refutations
                     elif web_info.get("is_debunked"):
                         final_prediction = "FAKE"
-                        final_confidence = round(max(confidence_pct, 95.5), 2)
-                        publisher = web_info["fact_checks"][0]["publisher"]
-                        rating = web_info["fact_checks"][0]["rating"]
-                        final_explanation = f"Flagged and debunked by independent fact-checkers ({publisher}) with verified rating: '{rating}'."
+                        final_confidence = round(max(confidence_pct, 96.5), 2)
+                        if web_info.get("fact_checks"):
+                            publisher = web_info["fact_checks"][0]["publisher"]
+                            rating = web_info["fact_checks"][0]["rating"]
+                            final_explanation = f"Flagged and debunked by independent fact-checkers ({publisher}) with verified rating: '{rating}'."
+                        else:
+                            final_explanation = web_info.get("web_summary") or "Flagged as debunked disinformation by verified news and fact-checking authorities."
 
                     # Case 2: Uncorroborated critical event claim (death / assassination / arrest hoaxes)
                     elif web_info.get("is_uncorroborated_hoax") or web_info.get("web_verdict") == "UNCORROBORATED_CRITICAL_CLAIM":
@@ -210,6 +227,22 @@ class FakeNewsPredictor:
                     "live_sources": [],
                     "fact_checks": []
                 }
+
+        # 6.5 Forensic Stylometry Calibration
+        if not (web_info and (web_info.get("gk_info") or web_info.get("is_debunked") or (web_info.get("wikipedia_grounding") and web_info["wikipedia_grounding"].get("is_grounded")))):
+            if is_clickbait:
+                if final_prediction == "FAKE":
+                    final_confidence = round(max(final_confidence, 95.2), 2)
+                elif final_prediction == "REAL" and (not web_info or web_info.get("sources_count", 0) == 0):
+                    final_prediction = "FAKE"
+                    final_confidence = 89.5
+                    final_explanation = (
+                        "Flagged as high-probability sensationalist fabrication. "
+                        "Forensic stylometry detected high sensationalism density, punctuation dramatism, "
+                        "or conspiratorial framing with zero corroborating news coverage."
+                    )
+            elif has_journalistic_attribution and final_prediction == "REAL":
+                final_confidence = round(min(98.5, max(final_confidence, 93.5)), 2)
         
         elapsed_ms = round((time.time() - t0) * 1000, 2)
         
@@ -222,6 +255,7 @@ class FakeNewsPredictor:
             "feature_details": xai_info["feature_details"],
             "explanation": final_explanation,
             "disclaimer": xai_info["disclaimer"],
+            "stylometry": stylometry_info,
             "web_verification": web_info,
             "cached": False,
             "stats": {

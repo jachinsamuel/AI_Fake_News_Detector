@@ -137,6 +137,7 @@ def predict():
             "feature_details": result["feature_details"],
             "explanation": result["explanation"],
             "disclaimer": result["disclaimer"],
+            "stylometry": result.get("stylometry"),
             "web_verification": result.get("web_verification"),
             "stats": result["stats"],
             "cached": result.get("cached", False),

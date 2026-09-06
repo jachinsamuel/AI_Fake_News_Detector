@@ -250,5 +250,82 @@ class TestCacheAndScraper(unittest.TestCase):
             scrape_article_from_url("")
 
 
+class TestForensicStylometry(unittest.TestCase):
+    """Test psycholinguistic stylometric feature engineering and extraction."""
+
+    def test_sensationalism_extraction(self):
+        from src.features import analyze_text_stylometry
+        clickbait = "SHOCKING BOMBSHELL: MIRACLE HERB CURES ALL CANCER THEY DONT WANT YOU TO KNOW!!!"
+        res = analyze_text_stylometry(clickbait)
+        self.assertIn(res["sensationalism_level"], ["Moderate", "High"])
+        self.assertGreater(res["punctuation_dramatism"], 0.2)
+        self.assertGreater(res["uppercase_ratio"], 0.3)
+        self.assertEqual(res["style_verdict"], "Sensationalist / Clickbait")
+
+    def test_journalistic_attribution_extraction(self):
+        from src.features import analyze_text_stylometry
+        formal = (
+            "WASHINGTON (Reuters) - The Federal Reserve announced an interest rate adjustment "
+            "following official committee hearings on Wednesday, according to a spokesperson."
+        )
+        res = analyze_text_stylometry(formal)
+        self.assertGreater(res["attribution_score"], 0.1)
+        self.assertEqual(res["sensationalism_level"], "Low")
+        self.assertEqual(res["style_verdict"], "Formal Journalistic")
+
+    def test_stylometric_transformer(self):
+        from src.features import StylometricFeatureExtractor
+        import numpy as np
+        extractor = StylometricFeatureExtractor()
+        data = ["Breaking news report with facts.", "SHOCKING BOMBSHELL HOAX!!!"]
+        matrix = extractor.transform(data)
+        self.assertIsInstance(matrix, np.ndarray)
+        self.assertEqual(matrix.shape, (2, 10))
+
+
+class TestWorldKnowledgeAndRefutation(unittest.TestCase):
+    """Test corporate leadership, scientific consensus, and NLI refutation."""
+
+    def test_tech_ceo_world_gk(self):
+        from src.web_verifier import verify_world_gk_claim
+        real_claim = verify_world_gk_claim("Tim Cook is the CEO of Apple")
+        self.assertIsNotNone(real_claim)
+        self.assertEqual(real_claim["verdict"], "REAL")
+        self.assertGreaterEqual(real_claim["confidence"], 98.0)
+
+        fake_claim = verify_world_gk_claim("Jachin Samuel is the CEO of Apple")
+        self.assertIsNotNone(fake_claim)
+        self.assertEqual(fake_claim["verdict"], "FAKE")
+        self.assertIn("Tim Cook", fake_claim["explanation"])
+
+    def test_scientific_consensus_debunks(self):
+        from src.web_verifier import verify_world_gk_claim
+        flat_earth = verify_world_gk_claim("The earth is flat")
+        self.assertIsNotNone(flat_earth)
+        self.assertEqual(flat_earth["verdict"], "FAKE")
+        self.assertGreaterEqual(flat_earth["confidence"], 99.0)
+
+        vaccine_myth = verify_world_gk_claim("Vaccines cause autism")
+        self.assertIsNotNone(vaccine_myth)
+        self.assertEqual(vaccine_myth["verdict"], "FAKE")
+
+    def test_headline_refutation_detection(self):
+        from src.web_verifier import check_headline_refutation
+        query_words = ["garlic", "cures", "cancer"]
+        debunk_title = "Fact Check: Garlic does not cure cancer, oncologists warn"
+        self.assertTrue(check_headline_refutation(query_words, debunk_title))
+
+        corroborate_title = "Clinical study examines new cancer therapy"
+        self.assertFalse(check_headline_refutation(query_words, corroborate_title))
+
+    def test_predict_includes_stylometry(self):
+        from src.predict import get_predictor
+        predictor = get_predictor()
+        res = predictor.predict("NASA James Webb Space Telescope discovers distant galaxies.", check_web=False)
+        self.assertIn("stylometry", res)
+        self.assertIn("sensationalism_density", res["stylometry"])
+        self.assertIn("style_verdict", res["stylometry"])
+
+
 if __name__ == "__main__":
     unittest.main()

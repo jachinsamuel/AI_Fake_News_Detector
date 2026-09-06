@@ -52,6 +52,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const factChecksContainer = document.getElementById("fact-checks-container");
     const factChecksList = document.getElementById("fact-checks-list");
 
+    // Forensic Stylometry Elements
+    const stylometryBox = document.getElementById("stylometry-box");
+    const styleVerdictBadge = document.getElementById("style-verdict-badge");
+    const sensationalismBar = document.getElementById("sensationalism-bar");
+    const sensationalismVal = document.getElementById("sensationalism-val");
+    const attributionBar = document.getElementById("attribution-bar");
+    const attributionVal = document.getElementById("attribution-val");
+    const lexicalPill = document.getElementById("lexical-pill");
+    const punctPill = document.getElementById("punct-pill");
+
     const telemetryLatency = document.getElementById("telemetry-latency");
     const telemetryCache = document.getElementById("telemetry-cache");
     const exportPdfBtn = document.getElementById("export-pdf-btn");
@@ -258,6 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTextStats();
         hideError();
         resultCard.classList.add("hidden");
+        if (stylometryBox) stylometryBox.classList.add("hidden");
         newsInput.focus();
     });
 
@@ -382,6 +393,55 @@ document.addEventListener("DOMContentLoaded", () => {
             wikiLink.href = web.wikipedia_grounding.url;
         } else {
             wikiBox.classList.add("hidden");
+        }
+
+        // Forensic Stylometry Breakdown
+        const sty = data.stylometry;
+        if (sty && stylometryBox) {
+            stylometryBox.classList.remove("hidden");
+            styleVerdictBadge.textContent = sty.style_verdict || "Neutral";
+            
+            // Style badge appearance
+            styleVerdictBadge.className = "style-badge";
+            if (sty.style_verdict.includes("Clickbait") || sty.sensationalism_level === "High") {
+                styleVerdictBadge.classList.add("style-clickbait");
+            } else if (sty.style_verdict.includes("Journalistic") || sty.attribution_level === "High") {
+                styleVerdictBadge.classList.add("style-journalistic");
+            } else {
+                styleVerdictBadge.classList.add("style-neutral");
+            }
+
+            // Sensationalism meter
+            const sensPct = Math.min(100, Math.round(sty.sensationalism_density * 100));
+            sensationalismBar.style.width = `${Math.max(4, sensPct)}%`;
+            sensationalismVal.textContent = `${sty.sensationalism_level} (${sensPct}%)`;
+            if (sty.sensationalism_level === "High") {
+                sensationalismBar.style.backgroundColor = "#ef4444";
+            } else if (sty.sensationalism_level === "Moderate") {
+                sensationalismBar.style.backgroundColor = "#f59e0b";
+            } else {
+                sensationalismBar.style.backgroundColor = "#10b981";
+            }
+
+            // Attribution meter
+            const attrPct = Math.min(100, Math.round(sty.attribution_score * 100));
+            attributionBar.style.width = `${Math.max(4, attrPct)}%`;
+            attributionVal.textContent = `${sty.attribution_level} (${attrPct}%)`;
+
+            // Lexical Diversity
+            const ttrPct = Math.round(sty.lexical_diversity * 100);
+            lexicalPill.textContent = `${ttrPct}% TTR`;
+
+            // Punctuation & Caps
+            if (sty.punctuation_dramatism > 0.35 || sty.uppercase_ratio > 0.2) {
+                punctPill.textContent = "Elevated / Dramatic";
+                punctPill.className = "metric-pill pill-warn";
+            } else {
+                punctPill.textContent = "Objective / Standard";
+                punctPill.className = "metric-pill pill-ok";
+            }
+        } else if (stylometryBox) {
+            stylometryBox.classList.add("hidden");
         }
 
         // Live Web Verification & Sources

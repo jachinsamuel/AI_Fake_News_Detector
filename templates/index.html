@@ -162,6 +162,41 @@
                     <a href="#" id="wiki-link" target="_blank" rel="noopener noreferrer" class="wiki-url">View Wikipedia Article →</a>
                 </div>
 
+                <!-- Forensic Stylometry & Psycholinguistic Breakdown Card -->
+                <div class="stylometry-box hidden" id="stylometry-box">
+                    <div class="stylometry-header">
+                        <div class="stylometry-title-left">
+                            <span class="stylometry-icon">🔬</span>
+                            <strong>AI Forensic Stylometry &amp; Tone Analysis</strong>
+                        </div>
+                        <span class="style-badge" id="style-verdict-badge">Neutral</span>
+                    </div>
+                    <div class="stylometry-grid">
+                        <div class="stylometry-metric">
+                            <span class="metric-label">Sensationalism / Hyperbole:</span>
+                            <div class="metric-bar-wrap">
+                                <div class="metric-bar" id="sensationalism-bar"></div>
+                            </div>
+                            <span class="metric-val" id="sensationalism-val">Low</span>
+                        </div>
+                        <div class="stylometry-metric">
+                            <span class="metric-label">Journalistic Attribution:</span>
+                            <div class="metric-bar-wrap">
+                                <div class="metric-bar attr-bar" id="attribution-bar"></div>
+                            </div>
+                            <span class="metric-val" id="attribution-val">Absent</span>
+                        </div>
+                        <div class="stylometry-metric">
+                            <span class="metric-label">Lexical Diversity:</span>
+                            <span class="metric-pill" id="lexical-pill">100%</span>
+                        </div>
+                        <div class="stylometry-metric">
+                            <span class="metric-label">Punctuation &amp; Caps:</span>
+                            <span class="metric-pill" id="punct-pill">Normal</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Live Web Verification & Sources Section -->
                 <div class="web-verification-section hidden" id="web-verification-box">
                     <div class="web-header">
