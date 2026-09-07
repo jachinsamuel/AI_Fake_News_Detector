@@ -19,7 +19,18 @@
         <header class="app-header">
             <div class="header-content">
                 <div class="brand">
+                    <div class="brand-badge-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
+                    </div>
                     <span class="brand-name">Fake News Detector</span>
+                    <span class="brand-pill">v2.5 AI Core</span>
+                </div>
+                <div class="header-status">
+                    <span class="status-dot"></span>
+                    <span class="status-label">Ensemble Online</span>
                 </div>
             </div>
         </header>
@@ -28,15 +39,32 @@
         <main class="main-content">
             <!-- Headline -->
             <section class="intro">
+                <div class="intro-eyebrow">
+                    <span class="eyebrow-chip">
+                        <span class="eyebrow-pulse"></span>
+                        Soft-Voting ML &amp; Multimodal Verification
+                    </span>
+                </div>
                 <h1>Analyze News Authenticity</h1>
-                <p>Paste a news headline, complete article text, or a live article link to predict authenticity using machine learning and live web verification.</p>
+                <p>Verify headlines, articles, web links, or social media clippings using machine learning ensembles, forensic stylometry, and live web knowledge grounding.</p>
             </section>
 
             <!-- Mode Selector Tabs -->
-            <div class="mode-tabs">
-                <button type="button" class="tab-btn active" id="tab-text" data-mode="text">Enter Text / Headline</button>
-                <button type="button" class="tab-btn" id="tab-url" data-mode="url">Paste News Link (URL)</button>
-                <button type="button" class="tab-btn" id="tab-image" data-mode="image">Upload / Paste Screenshot (OCR)</button>
+            <div class="mode-tabs-wrapper">
+                <div class="mode-tabs" role="tablist">
+                    <button type="button" class="tab-btn active" id="tab-text" data-mode="text" role="tab" aria-selected="true">
+                        <svg class="tab-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        <span>Text / Headline</span>
+                    </button>
+                    <button type="button" class="tab-btn" id="tab-url" data-mode="url" role="tab" aria-selected="false">
+                        <svg class="tab-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        <span>News Link (URL)</span>
+                    </button>
+                    <button type="button" class="tab-btn" id="tab-image" data-mode="image" role="tab" aria-selected="false">
+                        <svg class="tab-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                        <span>Screenshot (OCR)</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Input Card -->
@@ -177,102 +205,117 @@
 
             <!-- Result Card -->
             <div id="result-card" class="card result-card hidden" aria-live="polite">
-                <div class="result-top">
-                    <div class="verdict-block">
-                        <span class="verdict-tag" id="verdict-tag">REAL NEWS</span>
-                        <span class="verdict-model" id="stat-model">Soft-Voting Ensemble</span>
-                    </div>
-                    <div class="confidence-block">
-                        <span class="confidence-label">Confidence</span>
-                        <span class="confidence-number" id="confidence-val">95.5%</span>
-                    </div>
-                </div>
-
-                <!-- Confidence Bar -->
-                <div class="bar-track">
-                    <div class="bar-fill" id="confidence-bar"></div>
-                </div>
-
-                <!-- Key Words -->
-                <div class="words-section">
-                    <span class="section-subtitle">Influential Terms Detected:</span>
-                    <div class="words-list" id="feature-tags-container">
-                        <!-- Filled by JS -->
-                    </div>
-                </div>
-
-                <!-- Explanation -->
-                <div class="explanation-box">
-                    <p id="explanation-text"></p>
-                </div>
-
-                <!-- Wikipedia Fact Grounding Box -->
-                <div class="wiki-box hidden" id="wiki-grounding-box">
-                    <div class="wiki-badge-row">
-                        <span class="wiki-icon">📖</span>
-                        <strong>Wikipedia Encyclopedic Grounding</strong>
-                    </div>
-                    <p class="wiki-desc" id="wiki-desc"></p>
-                    <p class="wiki-snippet" id="wiki-snippet"></p>
-                    <a href="#" id="wiki-link" target="_blank" rel="noopener noreferrer" class="wiki-url">View Wikipedia Article →</a>
-                </div>
-
-                <!-- Forensic Stylometry & Psycholinguistic Breakdown Card -->
-                <div class="stylometry-box hidden" id="stylometry-box">
-                    <div class="stylometry-header">
-                        <div class="stylometry-title-left">
-                            <span class="stylometry-icon">🔬</span>
-                            <strong>AI Forensic Stylometry &amp; Tone Analysis</strong>
+                <!-- Result Hero Banner (Full-Width Summary) -->
+                <div class="result-hero-banner">
+                    <div class="result-top">
+                        <div class="verdict-block">
+                            <span class="verdict-tag" id="verdict-tag">REAL NEWS</span>
+                            <span class="verdict-model" id="stat-model">Soft-Voting Ensemble</span>
                         </div>
-                        <span class="style-badge" id="style-verdict-badge">Neutral</span>
+                        <div class="confidence-block">
+                            <span class="confidence-label">Prediction Confidence</span>
+                            <span class="confidence-number" id="confidence-val">95.5%</span>
+                        </div>
                     </div>
-                    <div class="stylometry-grid">
-                        <div class="stylometry-metric">
-                            <span class="metric-label">Sensationalism / Hyperbole:</span>
-                            <div class="metric-bar-wrap">
-                                <div class="metric-bar" id="sensationalism-bar"></div>
+
+                    <!-- Confidence Bar -->
+                    <div class="bar-track">
+                        <div class="bar-fill" id="confidence-bar"></div>
+                    </div>
+
+                    <!-- Executive Explanation Callout -->
+                    <div class="explanation-box">
+                        <p id="explanation-text"></p>
+                    </div>
+                </div>
+
+                <!-- 2-Column Bento Grid for Deep Forensic & Grounding Analysis -->
+                <div class="result-bento-grid">
+                    <!-- Column 1: Language & Forensic Analysis -->
+                    <div class="bento-col bento-col-forensic">
+                        <!-- Forensic Stylometry & Psycholinguistic Breakdown Card -->
+                        <div class="stylometry-box hidden" id="stylometry-box">
+                            <div class="stylometry-header">
+                                <div class="stylometry-title-left">
+                                    <span class="stylometry-icon">🔬</span>
+                                    <strong>Forensic Stylometry &amp; Tone</strong>
+                                </div>
+                                <span class="style-badge" id="style-verdict-badge">Neutral</span>
                             </div>
-                            <span class="metric-val" id="sensationalism-val">Low</span>
-                        </div>
-                        <div class="stylometry-metric">
-                            <span class="metric-label">Journalistic Attribution:</span>
-                            <div class="metric-bar-wrap">
-                                <div class="metric-bar attr-bar" id="attribution-bar"></div>
+                            <div class="stylometry-grid">
+                                <div class="stylometry-metric">
+                                    <span class="metric-label">Sensationalism / Hyperbole:</span>
+                                    <div class="metric-bar-wrap">
+                                        <div class="metric-bar" id="sensationalism-bar"></div>
+                                    </div>
+                                    <span class="metric-val" id="sensationalism-val">Low</span>
+                                </div>
+                                <div class="stylometry-metric">
+                                    <span class="metric-label">Journalistic Attribution:</span>
+                                    <div class="metric-bar-wrap">
+                                        <div class="metric-bar attr-bar" id="attribution-bar"></div>
+                                    </div>
+                                    <span class="metric-val" id="attribution-val">Absent</span>
+                                </div>
+                                <div class="stylometry-metric">
+                                    <span class="metric-label">Lexical Diversity:</span>
+                                    <span class="metric-pill" id="lexical-pill">100%</span>
+                                </div>
+                                <div class="stylometry-metric">
+                                    <span class="metric-label">Punctuation &amp; Caps:</span>
+                                    <span class="metric-pill" id="punct-pill">Normal</span>
+                                </div>
                             </div>
-                            <span class="metric-val" id="attribution-val">Absent</span>
                         </div>
-                        <div class="stylometry-metric">
-                            <span class="metric-label">Lexical Diversity:</span>
-                            <span class="metric-pill" id="lexical-pill">100%</span>
-                        </div>
-                        <div class="stylometry-metric">
-                            <span class="metric-label">Punctuation &amp; Caps:</span>
-                            <span class="metric-pill" id="punct-pill">Normal</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Live Web Verification & Sources Section -->
-                <div class="web-verification-section hidden" id="web-verification-box">
-                    <div class="web-header">
-                        <span class="section-subtitle">Live Web &amp; Fact-Checking Evidence:</span>
-                        <span class="web-status-badge" id="web-verdict-badge">Corroborated</span>
-                    </div>
-                    <p class="web-summary-text" id="web-summary-text"></p>
-                    
-                    <!-- Live Sources Citations -->
-                    <div class="sources-container hidden" id="sources-container">
-                        <span class="sources-label">Live Source Citations:</span>
-                        <div class="sources-list" id="sources-list">
-                            <!-- Filled dynamically -->
+                        <!-- Influential Linguistic Terms Card -->
+                        <div class="words-section">
+                            <div class="bento-card-header">
+                                <span class="section-subtitle">Influential Terms Detected</span>
+                                <span class="section-hint">Signals driving classification</span>
+                            </div>
+                            <div class="words-list" id="feature-tags-container">
+                                <!-- Filled by JS -->
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Fact Checks Found -->
-                    <div class="fact-checks-container hidden" id="fact-checks-container">
-                        <span class="sources-label">Independent Fact-Checks:</span>
-                        <div class="fact-checks-list" id="fact-checks-list">
-                            <!-- Filled dynamically -->
+                    <!-- Column 2: External Grounding & Live Web Corroboration -->
+                    <div class="bento-col bento-col-evidence">
+                        <!-- Wikipedia Fact Grounding Box -->
+                        <div class="wiki-box hidden" id="wiki-grounding-box">
+                            <div class="wiki-badge-row">
+                                <span class="wiki-icon">📖</span>
+                                <strong>Wikipedia Knowledge Grounding</strong>
+                            </div>
+                            <p class="wiki-desc" id="wiki-desc"></p>
+                            <p class="wiki-snippet" id="wiki-snippet"></p>
+                            <a href="#" id="wiki-link" target="_blank" rel="noopener noreferrer" class="wiki-url">View Wikipedia Article →</a>
+                        </div>
+
+                        <!-- Live Web Verification & Sources Section -->
+                        <div class="web-verification-section hidden" id="web-verification-box">
+                            <div class="web-header">
+                                <span class="section-subtitle">Live Web &amp; Fact-Checking</span>
+                                <span class="web-status-badge" id="web-verdict-badge">Corroborated</span>
+                            </div>
+                            <p class="web-summary-text" id="web-summary-text"></p>
+                            
+                            <!-- Live Sources Citations -->
+                            <div class="sources-container hidden" id="sources-container">
+                                <span class="sources-label">Live Source Citations:</span>
+                                <div class="sources-list" id="sources-list">
+                                    <!-- Filled dynamically -->
+                                </div>
+                            </div>
+
+                            <!-- Fact Checks Found -->
+                            <div class="fact-checks-container hidden" id="fact-checks-container">
+                                <span class="sources-label">Independent Fact-Checks:</span>
+                                <div class="fact-checks-list" id="fact-checks-list">
+                                    <!-- Filled dynamically -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
