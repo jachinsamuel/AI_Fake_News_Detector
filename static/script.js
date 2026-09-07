@@ -15,6 +15,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const scrapedTitle = document.getElementById("scraped-title");
     const scrapedSource = document.getElementById("scraped-source");
 
+    // OCR Mode & Dropzone Elements
+    const tabImage = document.getElementById("tab-image");
+    const panelImage = document.getElementById("panel-image");
+    const ocrDropzone = document.getElementById("ocr-dropzone");
+    const imageFileInput = document.getElementById("image-file-input");
+    const dropzonePrompt = document.getElementById("dropzone-prompt");
+    const imagePreviewContainer = document.getElementById("image-preview-container");
+    const imagePreviewImg = document.getElementById("image-preview-img");
+    const removeImageBtn = document.getElementById("remove-image-btn");
+    const previewFilename = document.getElementById("preview-filename");
+    const previewFilesize = document.getElementById("preview-filesize");
+    const ocrProgressBox = document.getElementById("ocr-progress-box");
+    const ocrStatusText = document.getElementById("ocr-status-text");
+    const ocrPct = document.getElementById("ocr-pct");
+    const ocrProgressBar = document.getElementById("ocr-progress-bar");
+    const ocrResultBox = document.getElementById("ocr-result-box");
+    const ocrExtractedText = document.getElementById("ocr-extracted-text");
+
     // Text & Telemetry Inputs
     const newsInput = document.getElementById("news-input");
     const wordCountSpan = document.getElementById("word-count");
@@ -168,21 +186,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 1. Mode Switcher
-    tabText.addEventListener("click", () => {
-        tabText.classList.add("active");
-        tabUrl.classList.remove("active");
-        panelText.classList.remove("hidden");
-        panelUrl.classList.add("hidden");
-        newsInput.focus();
-    });
+    function switchMode(mode) {
+        tabText.classList.toggle("active", mode === "text");
+        tabUrl.classList.toggle("active", mode === "url");
+        if (tabImage) tabImage.classList.toggle("active", mode === "image");
 
-    tabUrl.addEventListener("click", () => {
-        tabUrl.classList.add("active");
-        tabText.classList.remove("active");
-        panelUrl.classList.remove("hidden");
-        panelText.classList.add("hidden");
-        urlInput.focus();
-    });
+        panelText.classList.toggle("hidden", mode !== "text");
+        panelUrl.classList.toggle("hidden", mode !== "url");
+        if (panelImage) panelImage.classList.toggle("hidden", mode !== "image");
+
+        if (mode === "text") newsInput.focus();
+        else if (mode === "url") urlInput.focus();
+        else if (mode === "image" && ocrDropzone) ocrDropzone.focus();
+    }
+
+    tabText.addEventListener("click", () => switchMode("text"));
+    tabUrl.addEventListener("click", () => switchMode("url"));
+    if (tabImage) tabImage.addEventListener("click", () => switchMode("image"));
 
     // 2. URL Scraper Fetch
     fetchUrlBtn.addEventListener("click", handleUrlFetch);
@@ -245,6 +265,196 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // 2.5. OCR Image & Screenshot Engine
+    let isProcessingOcr = false;
+
+    if (ocrDropzone && imageFileInput) {
+        ocrDropzone.addEventListener("click", (e) => {
+            if (e.target !== removeImageBtn && !e.target.closest("#remove-image-btn")) {
+                imageFileInput.click();
+            }
+        });
+
+        ocrDropzone.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                imageFileInput.click();
+            }
+        });
+
+        // Drag & Drop
+        ocrDropzone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            ocrDropzone.classList.add("drag-over");
+        });
+
+        ocrDropzone.addEventListener("dragleave", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            ocrDropzone.classList.remove("drag-over");
+        });
+
+        ocrDropzone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            ocrDropzone.classList.remove("drag-over");
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleImageFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        imageFileInput.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleImageFile(e.target.files[0]);
+            }
+        });
+    }
+
+    // Global Clipboard Paste (Ctrl+V) anywhere on page
+    document.addEventListener("paste", (e) => {
+        // If user is pasting into a text input or textarea, let default paste happen
+        if (e.target && (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT")) {
+            return;
+        }
+
+        const clipboard = e.clipboardData || window.clipboardData;
+        if (!clipboard || !clipboard.items) return;
+
+        for (let i = 0; i < clipboard.items.length; i++) {
+            const item = clipboard.items[i];
+            if (item.type && item.type.indexOf("image") !== -1) {
+                const file = item.getAsFile();
+                if (file) {
+                    e.preventDefault();
+                    switchMode("image");
+                    handleImageFile(file, "Pasted Screenshot");
+                    break;
+                }
+            }
+        }
+    });
+
+    if (removeImageBtn) {
+        removeImageBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            resetOcrState();
+        });
+    }
+
+    function resetOcrState() {
+        if (imageFileInput) imageFileInput.value = "";
+        if (imagePreviewContainer) imagePreviewContainer.classList.add("hidden");
+        if (dropzonePrompt) dropzonePrompt.classList.remove("hidden");
+        if (ocrProgressBox) ocrProgressBox.classList.add("hidden");
+        if (ocrResultBox) ocrResultBox.classList.add("hidden");
+        if (ocrExtractedText) ocrExtractedText.value = "";
+        if (imagePreviewImg) imagePreviewImg.src = "";
+    }
+
+    async function handleImageFile(file, customName = null) {
+        if (!file || !file.type.startsWith("image/")) {
+            showError("Please select a valid image file (PNG, JPG, WEBP).");
+            return;
+        }
+
+        hideError();
+        const fileName = customName || file.name || "screenshot.png";
+        const fileSizeKb = (file.size / 1024).toFixed(1);
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (imagePreviewImg) imagePreviewImg.src = event.target.result;
+            if (previewFilename) previewFilename.textContent = fileName;
+            if (previewFilesize) previewFilesize.textContent = `${fileSizeKb} KB`;
+            if (dropzonePrompt) dropzonePrompt.classList.add("hidden");
+            if (imagePreviewContainer) imagePreviewContainer.classList.remove("hidden");
+            
+            // Execute OCR extraction
+            processOcr(event.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function processOcr(imageDataUrl) {
+        if (isProcessingOcr) return;
+        isProcessingOcr = true;
+
+        if (ocrProgressBox) ocrProgressBox.classList.remove("hidden");
+        if (ocrResultBox) ocrResultBox.classList.add("hidden");
+        if (ocrProgressBar) ocrProgressBar.style.width = "8%";
+        if (ocrStatusText) ocrStatusText.textContent = "Loading Tesseract OCR Engine...";
+        if (ocrPct) ocrPct.textContent = "8%";
+
+        try {
+            if (typeof Tesseract === "undefined") {
+                throw new Error("Tesseract.js OCR library is still loading or could not be reached. Please check your internet connection.");
+            }
+
+            const worker = await Tesseract.createWorker("eng", 1, {
+                logger: (m) => {
+                    if (m.status === "recognizing text") {
+                        const pct = Math.min(99, Math.round(m.progress * 100));
+                        if (ocrProgressBar) ocrProgressBar.style.width = `${pct}%`;
+                        if (ocrStatusText) ocrStatusText.textContent = `Recognizing text (${pct}%)...`;
+                        if (ocrPct) ocrPct.textContent = `${pct}%`;
+                    } else if (m.status && ocrStatusText) {
+                        ocrStatusText.textContent = `${m.status.charAt(0).toUpperCase() + m.status.slice(1)}...`;
+                    }
+                }
+            });
+
+            const ret = await worker.recognize(imageDataUrl);
+            await worker.terminate();
+
+            const rawText = ret.data.text || "";
+            // Clean up lines, artifacts, and excessive whitespace
+            const cleaned = rawText
+                .replace(/\r\n/g, "\n")
+                .split("\n")
+                .map(l => l.trim())
+                .filter(l => l.length > 0)
+                .join(" ")
+                .replace(/\s+/g, " ")
+                .trim();
+
+            if (ocrProgressBar) ocrProgressBar.style.width = "100%";
+            if (ocrPct) ocrPct.textContent = "100%";
+            if (ocrStatusText) ocrStatusText.textContent = "Text extracted successfully!";
+
+            setTimeout(() => {
+                if (ocrProgressBox) ocrProgressBox.classList.add("hidden");
+            }, 600);
+
+            if (!cleaned || cleaned.length < 5) {
+                showError("Could not detect legible text from this image. Please ensure the screenshot has clear headline text.");
+                return;
+            }
+
+            if (ocrExtractedText) ocrExtractedText.value = cleaned;
+            if (ocrResultBox) ocrResultBox.classList.remove("hidden");
+            newsInput.value = cleaned;
+            updateTextStats();
+
+            // Auto-trigger veracity verification
+            analyzeText();
+
+        } catch (err) {
+            console.error("OCR Exception:", err);
+            if (ocrProgressBox) ocrProgressBox.classList.add("hidden");
+            showError(`OCR Error: ${err.message || "Failed to parse text from image."}`);
+        } finally {
+            isProcessingOcr = false;
+        }
+    }
+
+    if (ocrExtractedText) {
+        ocrExtractedText.addEventListener("input", () => {
+            newsInput.value = ocrExtractedText.value;
+            updateTextStats();
+        });
+    }
+
     // 3. Text Counter
     function updateTextStats() {
         const text = newsInput.value.trim();
@@ -265,6 +475,7 @@ document.addEventListener("DOMContentLoaded", () => {
         newsInput.value = "";
         urlInput.value = "";
         scrapedMeta.classList.add("hidden");
+        resetOcrState();
         updateTextStats();
         hideError();
         resultCard.classList.add("hidden");

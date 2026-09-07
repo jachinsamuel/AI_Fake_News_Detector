@@ -327,5 +327,68 @@ class TestWorldKnowledgeAndRefutation(unittest.TestCase):
         self.assertIn("style_verdict", res["stylometry"])
 
 
+class TestImageOcrEndpoint(unittest.TestCase):
+    """Test /api/ocr image input decoding and validation."""
+
+    @classmethod
+    def setUpClass(cls):
+        from app import app
+        cls.client = app.test_client()
+
+    def test_ocr_missing_payload(self):
+        resp = self.client.post("/api/ocr")
+        self.assertEqual(resp.status_code, 400)
+        data = json.loads(resp.data)
+        self.assertIn("error", data)
+
+    def test_ocr_invalid_base64(self):
+        resp = self.client.post(
+            "/api/ocr",
+            data=json.dumps({"image": "not-valid-base64!!!"}),
+            content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, 400)
+
+    def test_ocr_valid_base64_image(self):
+        import io
+        import base64
+        from PIL import Image
+
+        # Create a small 50x20 test image in memory
+        img = Image.new("RGB", (50, 20), color=(255, 255, 255))
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        b64_data = base64.b64encode(buf.getvalue()).decode("utf-8")
+
+        resp = self.client.post(
+            "/api/ocr",
+            data=json.dumps({"image": f"data:image/png;base64,{b64_data}"}),
+            content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["image_size"], "50x20")
+
+    def test_ocr_multipart_file_upload(self):
+        import io
+        from PIL import Image
+
+        img = Image.new("RGB", (60, 30), color=(240, 240, 240))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG")
+        buf.seek(0)
+
+        resp = self.client.post(
+            "/api/ocr",
+            data={"image": (buf, "headline_screenshot.jpg")},
+            content_type="multipart/form-data"
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["image_size"], "60x30")
+
+
 if __name__ == "__main__":
     unittest.main()

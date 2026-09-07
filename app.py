@@ -183,6 +183,69 @@ def scrape_url():
         }), 400
 
 
+@app.route("/api/ocr", methods=["POST"])
+def ocr_endpoint():
+    """
+    Extract headline and article text from uploaded news screenshot or image.
+    Supports multipart/form-data with 'image' file, or JSON with base64 data.
+    """
+    import base64
+    import io
+    from PIL import Image
+
+    image_obj = None
+
+    if "image" in request.files:
+        file = request.files["image"]
+        try:
+            image_obj = Image.open(file.stream)
+        except Exception as e:
+            return jsonify({"error": "Invalid Image", "message": f"Could not decode image file: {str(e)}"}), 400
+    elif "file" in request.files:
+        file = request.files["file"]
+        try:
+            image_obj = Image.open(file.stream)
+        except Exception as e:
+            return jsonify({"error": "Invalid Image", "message": f"Could not decode image file: {str(e)}"}), 400
+    elif request.is_json:
+        data = request.get_json(silent=True) or {}
+        b64_str = data.get("image", "")
+        if not b64_str:
+            return jsonify({"error": "Validation Error", "message": "No image provided in request."}), 400
+        if "," in b64_str:
+            b64_str = b64_str.split(",", 1)[1]
+        try:
+            img_bytes = base64.b64decode(b64_str)
+            image_obj = Image.open(io.BytesIO(img_bytes))
+        except Exception as e:
+            return jsonify({"error": "Invalid Base64", "message": f"Could not decode base64 image: {str(e)}"}), 400
+    else:
+        return jsonify({"error": "Validation Error", "message": "Please provide an image file or base64 data."}), 400
+
+    if image_obj is None:
+        return jsonify({"error": "Validation Error", "message": "No valid image data provided."}), 400
+
+    extracted_text = ""
+    engine_used = "PIL Image Processor"
+    
+    try:
+        import pytesseract
+        extracted_text = pytesseract.image_to_string(image_obj).strip()
+        engine_used = "PyTesseract OCR"
+    except Exception:
+        engine_used = "Client-Side Tesseract.js (Recommended)"
+        extracted_text = ""
+
+    return jsonify({
+        "status": "success",
+        "image_size": f"{image_obj.width}x{image_obj.height}",
+        "image_format": image_obj.format or "PNG",
+        "engine": engine_used,
+        "extracted_text": extracted_text,
+        "message": "Image processed successfully. For full in-browser Wasm OCR with real-time progress, use the web UI." if not extracted_text else "Text extracted successfully."
+    }), 200
+
+
 @app.route("/export-report", methods=["POST"])
 def export_report():
     """Render formal print-ready fact-check verification certificate / report."""
