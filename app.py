@@ -324,10 +324,11 @@ def health_check():
 
 
 if __name__ == "__main__":
+    host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", 5000))
     print(f"\n=======================================================")
     print(f" [STARTING] AI Fake News Detector with Live Web Verifier")
-    print(f" Access URL: http://127.0.0.1:{port}")
+    print(f" Access URL: http://{host}:{port}")
     print(f" Multithreaded: True | Keep-Alive Pooling: Active")
     print(f"=======================================================\n")
-    app.run(host="127.0.0.1", port=port, debug=False, threaded=True)
+    app.run(host=host, port=port, debug=False, threaded=True)
