@@ -282,6 +282,46 @@
 
                     <!-- Column 2: External Grounding & Live Web Corroboration -->
                     <div class="bento-col bento-col-evidence">
+                        <!-- Real-World Evidence Matrix & Domain Trust Card -->
+                        <div class="evidence-matrix-card hidden" id="evidence-matrix-box">
+                            <div class="evidence-header">
+                                <div class="evidence-title-left">
+                                    <span class="evidence-icon">🛡️</span>
+                                    <strong>Real-World Evidence Matrix</strong>
+                                </div>
+                                <span class="evidence-consensus-badge" id="evidence-consensus-badge">Corroborated</span>
+                            </div>
+                            <div class="evidence-metrics-grid">
+                                <div class="evidence-metric-item">
+                                    <span class="ev-label">Domain Trust Index:</span>
+                                    <span class="ev-val" id="domain-trust-val">98% (High Trust)</span>
+                                </div>
+                                <div class="evidence-metric-item">
+                                    <span class="ev-label">Top Publisher Tier:</span>
+                                    <span class="ev-val" id="publisher-tier-val">Tier 1: Global Wire</span>
+                                </div>
+                                <div class="evidence-metric-item">
+                                    <span class="ev-label">Corroborating Outlets:</span>
+                                    <span class="ev-val" id="outlets-count-val">4 Major Wires</span>
+                                </div>
+                                <div class="evidence-metric-item">
+                                    <span class="ev-label">Scientific / Historical:</span>
+                                    <span class="ev-val" id="knowledge-consensus-val">Established</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Disinformation Red Flags Alert (Revealed if viral tropes matched) -->
+                        <div class="red-flag-alert hidden" id="red-flags-box">
+                            <div class="red-flag-header">
+                                <span class="red-flag-icon">⚠️</span>
+                                <strong>Real-World Disinformation Trope Detected:</strong>
+                            </div>
+                            <div id="red-flags-list" class="red-flags-list">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+
                         <!-- Wikipedia Fact Grounding Box -->
                         <div class="wiki-box hidden" id="wiki-grounding-box">
                             <div class="wiki-badge-row">
@@ -291,6 +331,14 @@
                             <p class="wiki-desc" id="wiki-desc"></p>
                             <p class="wiki-snippet" id="wiki-snippet"></p>
                             <a href="#" id="wiki-link" target="_blank" rel="noopener noreferrer" class="wiki-url">View Wikipedia Article →</a>
+                            
+                            <!-- Multi-Entity Chips -->
+                            <div class="grounded-entities-wrap hidden" id="grounded-entities-wrap">
+                                <span class="entities-subtitle">Verified Real-World Entities:</span>
+                                <div class="entities-chips-list" id="grounded-entities-list">
+                                    <!-- Filled by JS -->
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Live Web Verification & Sources Section -->
@@ -303,7 +351,7 @@
                             
                             <!-- Live Sources Citations -->
                             <div class="sources-container hidden" id="sources-container">
-                                <span class="sources-label">Live Source Citations:</span>
+                                <span class="sources-label">Live Source Citations &amp; Credibility:</span>
                                 <div class="sources-list" id="sources-list">
                                     <!-- Filled dynamically -->
                                 </div>

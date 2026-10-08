@@ -70,6 +70,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const factChecksContainer = document.getElementById("fact-checks-container");
     const factChecksList = document.getElementById("fact-checks-list");
 
+    // Real-World Evidence Matrix & Red Flag Elements
+    const evidenceMatrixBox = document.getElementById("evidence-matrix-box");
+    const evidenceConsensusBadge = document.getElementById("evidence-consensus-badge");
+    const domainTrustVal = document.getElementById("domain-trust-val");
+    const publisherTierVal = document.getElementById("publisher-tier-val");
+    const outletsCountVal = document.getElementById("outlets-count-val");
+    const knowledgeConsensusVal = document.getElementById("knowledge-consensus-val");
+    const redFlagsBox = document.getElementById("red-flags-box");
+    const redFlagsList = document.getElementById("red-flags-list");
+    const groundedEntitiesWrap = document.getElementById("grounded-entities-wrap");
+    const groundedEntitiesList = document.getElementById("grounded-entities-list");
+
     // Forensic Stylometry Elements
     const stylometryBox = document.getElementById("stylometry-box");
     const styleVerdictBadge = document.getElementById("style-verdict-badge");
@@ -595,15 +607,90 @@ document.addEventListener("DOMContentLoaded", () => {
         // Explanation text
         explanationText.textContent = data.explanation;
 
-        // Wikipedia Grounding
+        // Wikipedia Grounding & Multi-Entity Grounding
         const web = data.web_verification;
         if (web && web.wikipedia_grounding && web.wikipedia_grounding.is_grounded) {
             wikiBox.classList.remove("hidden");
             wikiDesc.textContent = `${web.wikipedia_grounding.entity} — ${web.wikipedia_grounding.description}`;
             wikiSnippet.textContent = web.wikipedia_grounding.extract_snippet;
             wikiLink.href = web.wikipedia_grounding.url;
+
+            // Multi-Entity Chips
+            const entities = data.grounded_entities || (web && web.grounded_entities) || [];
+            if (entities.length > 0 && groundedEntitiesWrap && groundedEntitiesList) {
+                groundedEntitiesWrap.classList.remove("hidden");
+                groundedEntitiesList.innerHTML = "";
+                entities.forEach(ent => {
+                    const chip = document.createElement("a");
+                    chip.href = ent.url || "#";
+                    chip.target = "_blank";
+                    chip.rel = "noopener noreferrer";
+                    chip.className = "entity-chip";
+                    chip.innerHTML = `
+                        <span class="entity-chip-name">🏛️ ${ent.entity}</span>
+                        <span class="entity-chip-desc">${ent.description}</span>
+                    `;
+                    groundedEntitiesList.appendChild(chip);
+                });
+            } else if (groundedEntitiesWrap) {
+                groundedEntitiesWrap.classList.add("hidden");
+            }
         } else {
             wikiBox.classList.add("hidden");
+            if (groundedEntitiesWrap) groundedEntitiesWrap.classList.add("hidden");
+        }
+
+        // Real-World Evidence Matrix
+        const ev = data.evidence_matrix || (web && web.evidence_matrix);
+        if (ev && evidenceMatrixBox) {
+            evidenceMatrixBox.classList.remove("hidden");
+            if (evidenceConsensusBadge) {
+                evidenceConsensusBadge.textContent = (ev.cross_source_consensus || "CORROBORATED").replace(/_/g, " ");
+                evidenceConsensusBadge.className = "evidence-consensus-badge";
+                if (ev.cross_source_consensus && (ev.cross_source_consensus.includes("STRONG") || ev.cross_source_consensus.includes("VERIFIED"))) {
+                    evidenceConsensusBadge.classList.add("consensus-strong");
+                } else if (ev.cross_source_consensus && (ev.cross_source_consensus.includes("DEBUNK") || ev.cross_source_consensus.includes("CONTRADICT") || ev.cross_source_consensus.includes("TROPE"))) {
+                    evidenceConsensusBadge.classList.add("consensus-debunked");
+                } else {
+                    evidenceConsensusBadge.classList.add("consensus-neutral");
+                }
+            }
+            if (domainTrustVal) {
+                const trust = ev.average_domain_trust || 0;
+                domainTrustVal.textContent = `${trust}% ${trust >= 85 ? '(High Trust)' : trust > 0 ? '(Moderate)' : '(Uncorroborated)'}`;
+            }
+            if (publisherTierVal) {
+                publisherTierVal.textContent = ev.top_trust_tier || "Unrated";
+            }
+            if (outletsCountVal) {
+                outletsCountVal.textContent = `${ev.corroborating_sources_count || 0} Outlets (${ev.credible_outlets_count || 0} High-Credibility)`;
+            }
+            if (knowledgeConsensusVal) {
+                knowledgeConsensusVal.textContent = ev.scientific_consensus === "CONTRADICTED" ? "Contradicted by Science" : (ev.scientific_consensus === "ESTABLISHED" ? "Established Science" : "Standard Consensus");
+            }
+        } else if (evidenceMatrixBox) {
+            evidenceMatrixBox.classList.add("hidden");
+        }
+
+        // Real-World Disinformation Red Flags Alert
+        const rFlags = data.red_flags || (web && web.red_flags) || [];
+        if (rFlags.length > 0 && redFlagsBox && redFlagsList) {
+            redFlagsBox.classList.remove("hidden");
+            redFlagsList.innerHTML = "";
+            rFlags.forEach(rf => {
+                const item = document.createElement("div");
+                item.className = "red-flag-item";
+                item.innerHTML = `
+                    <div class="red-flag-title-row">
+                        <span class="red-flag-badge">${rf.severity || 'HIGH RISK'}</span>
+                        <strong>${rf.trope_name}</strong>
+                    </div>
+                    <p class="red-flag-desc">${rf.explanation}</p>
+                `;
+                redFlagsList.appendChild(item);
+            });
+        } else if (redFlagsBox) {
+            redFlagsBox.classList.add("hidden");
         }
 
         // Forensic Stylometry Breakdown
@@ -666,7 +753,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 webVerdictBadge.textContent = "Debunked by Fact-Checkers";
                 webVerdictBadge.classList.add("debunked");
             } else if (web.is_uncorroborated_hoax) {
-                webVerdictBadge.textContent = "Uncorroborated Hoax";
+                webVerdictBadge.textContent = web.web_verdict === "DISINFORMATION_TROPE_DETECTED" ? "Disinformation Pattern Flagged" : "Uncorroborated Hoax";
                 webVerdictBadge.classList.add("debunked");
             } else if (web.web_verdict.includes("WIKIPEDIA") || web.web_verdict === "CORROBORATED_BY_LIVE_NEWS") {
                 webVerdictBadge.textContent = "Corroborated by News Outlets";
@@ -689,9 +776,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     a.target = "_blank";
                     a.rel = "noopener noreferrer";
                     a.className = "source-item";
+                    const cred = s.credibility || {};
+                    const badgeHtml = cred.badge ? `<span class="source-trust-pill ${cred.trust_score >= 85 ? 'trust-high' : 'trust-med'}">${cred.badge} • ${cred.trust_score}%</span>` : '';
                     a.innerHTML = `
-                        <span class="source-title" title="${s.title}">${s.title}</span>
-                        <span class="source-meta">${s.source} ${s.published_at ? '• ' + s.published_at : ''}</span>
+                        <div class="source-info-left">
+                            <span class="source-title" title="${s.title}">${s.title}</span>
+                            <span class="source-meta">${s.source} ${s.published_at ? '• ' + s.published_at : ''}</span>
+                        </div>
+                        <div class="source-badge-right">
+                            ${badgeHtml}
+                        </div>
                     `;
                     sourcesList.appendChild(a);
                 });

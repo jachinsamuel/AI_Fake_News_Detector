@@ -188,6 +188,157 @@ CREDIBLE_DOMAINS = [
     "telegraphindia.com", "business-standard.com", "wikipedia.org"
 ]
 
+DOMAIN_CREDIBILITY_REGISTRY = {
+    # Tier 1: International Wires, Official Agencies & Peer-Reviewed Scientific Journals
+    "reuters": {"name": "Reuters", "tier": "Tier 1: Global Wire", "trust": 99, "badge": "Gold Wire"},
+    "reuters.com": {"name": "Reuters", "tier": "Tier 1: Global Wire", "trust": 99, "badge": "Gold Wire"},
+    "apnews.com": {"name": "Associated Press", "tier": "Tier 1: Global Wire", "trust": 99, "badge": "Gold Wire"},
+    "ap news": {"name": "Associated Press", "tier": "Tier 1: Global Wire", "trust": 99, "badge": "Gold Wire"},
+    "associated press": {"name": "Associated Press", "tier": "Tier 1: Global Wire", "trust": 99, "badge": "Gold Wire"},
+    "afp.com": {"name": "Agence France-Presse", "tier": "Tier 1: Global Wire", "trust": 98, "badge": "Gold Wire"},
+    "afp": {"name": "Agence France-Presse", "tier": "Tier 1: Global Wire", "trust": 98, "badge": "Gold Wire"},
+    "bbc.com": {"name": "BBC News", "tier": "Tier 1: Public Broadcaster", "trust": 96, "badge": "Public Broadcaster"},
+    "bbc.co.uk": {"name": "BBC News", "tier": "Tier 1: Public Broadcaster", "trust": 96, "badge": "Public Broadcaster"},
+    "bbc": {"name": "BBC News", "tier": "Tier 1: Public Broadcaster", "trust": 96, "badge": "Public Broadcaster"},
+    "npr.org": {"name": "NPR", "tier": "Tier 1: Public Broadcaster", "trust": 95, "badge": "Public Broadcaster"},
+    "npr": {"name": "NPR", "tier": "Tier 1: Public Broadcaster", "trust": 95, "badge": "Public Broadcaster"},
+    "bloomberg.com": {"name": "Bloomberg News", "tier": "Tier 1: Financial Wire", "trust": 95, "badge": "Financial Wire"},
+    "bloomberg": {"name": "Bloomberg News", "tier": "Tier 1: Financial Wire", "trust": 95, "badge": "Financial Wire"},
+    "nature.com": {"name": "Nature", "tier": "Tier 1: Peer-Reviewed Scientific", "trust": 99, "badge": "Scientific Journal"},
+    "nature": {"name": "Nature", "tier": "Tier 1: Peer-Reviewed Scientific", "trust": 99, "badge": "Scientific Journal"},
+    "sciencemag.org": {"name": "Science Journal", "tier": "Tier 1: Peer-Reviewed Scientific", "trust": 99, "badge": "Scientific Journal"},
+    "science": {"name": "Science", "tier": "Tier 1: Peer-Reviewed Scientific", "trust": 99, "badge": "Scientific Journal"},
+    "nasa.gov": {"name": "NASA", "tier": "Tier 1: Official Agency", "trust": 99, "badge": "Official Body"},
+    "nasa": {"name": "NASA", "tier": "Tier 1: Official Agency", "trust": 99, "badge": "Official Body"},
+    "who.int": {"name": "World Health Organization", "tier": "Tier 1: Global Health Authority", "trust": 97, "badge": "Health Body"},
+    "who": {"name": "World Health Organization", "tier": "Tier 1: Global Health Authority", "trust": 97, "badge": "Health Body"},
+    "cdc.gov": {"name": "CDC", "tier": "Tier 1: Health Agency", "trust": 97, "badge": "Health Body"},
+    "cdc": {"name": "CDC", "tier": "Tier 1: Health Agency", "trust": 97, "badge": "Health Body"},
+
+    # Tier 2: Established Regional, National & International Press
+    "thehindu.com": {"name": "The Hindu", "tier": "Tier 2: Major Newsroom", "trust": 93, "badge": "Verified Newsroom"},
+    "the hindu": {"name": "The Hindu", "tier": "Tier 2: Major Newsroom", "trust": 93, "badge": "Verified Newsroom"},
+    "indianexpress.com": {"name": "The Indian Express", "tier": "Tier 2: Major Newsroom", "trust": 91, "badge": "Verified Newsroom"},
+    "indian express": {"name": "The Indian Express", "tier": "Tier 2: Major Newsroom", "trust": 91, "badge": "Verified Newsroom"},
+    "timesofindia.indiatimes.com": {"name": "Times of India", "tier": "Tier 2: Major Newsroom", "trust": 88, "badge": "Verified Newsroom"},
+    "times of india": {"name": "Times of India", "tier": "Tier 2: Major Newsroom", "trust": 88, "badge": "Verified Newsroom"},
+    "hindustantimes.com": {"name": "Hindustan Times", "tier": "Tier 2: Major Newsroom", "trust": 89, "badge": "Verified Newsroom"},
+    "hindustan times": {"name": "Hindustan Times", "tier": "Tier 2: Major Newsroom", "trust": 89, "badge": "Verified Newsroom"},
+    "nytimes.com": {"name": "The New York Times", "tier": "Tier 2: Major Newsroom", "trust": 92, "badge": "Verified Newsroom"},
+    "new york times": {"name": "The New York Times", "tier": "Tier 2: Major Newsroom", "trust": 92, "badge": "Verified Newsroom"},
+    "washingtonpost.com": {"name": "The Washington Post", "tier": "Tier 2: Major Newsroom", "trust": 91, "badge": "Verified Newsroom"},
+    "washington post": {"name": "The Washington Post", "tier": "Tier 2: Major Newsroom", "trust": 91, "badge": "Verified Newsroom"},
+    "wsj.com": {"name": "The Wall Street Journal", "tier": "Tier 2: Major Newsroom", "trust": 93, "badge": "Verified Newsroom"},
+    "wall street journal": {"name": "The Wall Street Journal", "tier": "Tier 2: Major Newsroom", "trust": 93, "badge": "Verified Newsroom"},
+    "theguardian.com": {"name": "The Guardian", "tier": "Tier 2: Major Newsroom", "trust": 90, "badge": "Verified Newsroom"},
+    "the guardian": {"name": "The Guardian", "tier": "Tier 2: Major Newsroom", "trust": 90, "badge": "Verified Newsroom"},
+    "ndtv.com": {"name": "NDTV", "tier": "Tier 2: Major Newsroom", "trust": 87, "badge": "Verified Newsroom"},
+    "ndtv": {"name": "NDTV", "tier": "Tier 2: Major Newsroom", "trust": 87, "badge": "Verified Newsroom"},
+    "ani.in": {"name": "ANI News", "tier": "Tier 2: National Wire", "trust": 88, "badge": "National Wire"},
+    "ani": {"name": "ANI", "tier": "Tier 2: National Wire", "trust": 88, "badge": "National Wire"},
+    "ptinews.com": {"name": "PTI", "tier": "Tier 2: National Wire", "trust": 92, "badge": "National Wire"},
+    "pti": {"name": "PTI", "tier": "Tier 2: National Wire", "trust": 92, "badge": "National Wire"},
+    "aljazeera.com": {"name": "Al Jazeera", "tier": "Tier 2: Major Newsroom", "trust": 88, "badge": "Verified Newsroom"},
+    "al jazeera": {"name": "Al Jazeera", "tier": "Tier 2: Major Newsroom", "trust": 88, "badge": "Verified Newsroom"},
+    "dw.com": {"name": "Deutsche Welle", "tier": "Tier 2: Major Newsroom", "trust": 91, "badge": "Verified Newsroom"},
+    "deutsche welle": {"name": "Deutsche Welle", "tier": "Tier 2: Major Newsroom", "trust": 91, "badge": "Verified Newsroom"},
+    "france24.com": {"name": "France 24", "tier": "Tier 2: Major Newsroom", "trust": 90, "badge": "Verified Newsroom"},
+    "livemint.com": {"name": "Mint", "tier": "Tier 2: Financial Daily", "trust": 89, "badge": "Financial Daily"},
+    "deccanherald.com": {"name": "Deccan Herald", "tier": "Tier 2: Major Newsroom", "trust": 88, "badge": "Verified Newsroom"},
+
+    # Tier 3: Certified Independent Fact-Checkers (IFCN Certified)
+    "snopes.com": {"name": "Snopes", "tier": "Tier 3: Certified Fact-Checker", "trust": 97, "badge": "IFCN Certified"},
+    "snopes": {"name": "Snopes", "tier": "Tier 3: Certified Fact-Checker", "trust": 97, "badge": "IFCN Certified"},
+    "politifact.com": {"name": "PolitiFact", "tier": "Tier 3: Certified Fact-Checker", "trust": 97, "badge": "IFCN Certified"},
+    "politifact": {"name": "PolitiFact", "tier": "Tier 3: Certified Fact-Checker", "trust": 97, "badge": "IFCN Certified"},
+    "factcheck.org": {"name": "FactCheck.org", "tier": "Tier 3: Certified Fact-Checker", "trust": 98, "badge": "IFCN Certified"},
+    "boomlive.in": {"name": "BoomLive", "tier": "Tier 3: Certified Fact-Checker", "trust": 96, "badge": "IFCN Certified"},
+    "boom live": {"name": "BoomLive", "tier": "Tier 3: Certified Fact-Checker", "trust": 96, "badge": "IFCN Certified"},
+    "vishvasnews.com": {"name": "Vishvas News", "tier": "Tier 3: Certified Fact-Checker", "trust": 96, "badge": "IFCN Certified"},
+    "fullfact.org": {"name": "Full Fact", "tier": "Tier 3: Certified Fact-Checker", "trust": 97, "badge": "IFCN Certified"},
+
+    # Low-Trust, Satire, or Disinformation Outlets
+    "theonion.com": {"name": "The Onion", "tier": "Satire / Parody", "trust": 15, "badge": "Known Satire"},
+    "the onion": {"name": "The Onion", "tier": "Satire / Parody", "trust": 15, "badge": "Known Satire"},
+    "babylonbee.com": {"name": "The Babylon Bee", "tier": "Satire / Parody", "trust": 15, "badge": "Known Satire"},
+    "the babylon bee": {"name": "The Babylon Bee", "tier": "Satire / Parody", "trust": 15, "badge": "Known Satire"},
+    "beforeitsnews.com": {"name": "Before It's News", "tier": "Unverified Conspiracy", "trust": 10, "badge": "Disinformation Outlet"},
+    "infowars.com": {"name": "InfoWars", "tier": "Conspiracy / Disinformation", "trust": 8, "badge": "Disinformation Outlet"},
+    "naturalnews.com": {"name": "Natural News", "tier": "Pseudoscience Disinformation", "trust": 10, "badge": "Disinformation Outlet"}
+}
+
+def evaluate_domain_credibility(source_name: str, url: str = "") -> dict:
+    """Evaluate source publisher against real-world domain credibility registry."""
+    source_lower = (source_name or "").lower().strip()
+    url_lower = (url or "").lower().strip()
+    
+    for key, val in DOMAIN_CREDIBILITY_REGISTRY.items():
+        if key in source_lower or (url_lower and key in url_lower):
+            return {
+                "name": val["name"],
+                "tier": val["tier"],
+                "trust_score": val["trust"],
+                "badge": val["badge"],
+                "is_reputable": val["trust"] >= 80,
+                "is_satire_or_disinfo": val["trust"] < 30
+            }
+            
+    return {
+        "name": source_name or "Web News Source",
+        "tier": "Independent Web Outlet",
+        "trust_score": 75,
+        "badge": "Web News",
+        "is_reputable": False,
+        "is_satire_or_disinfo": False
+    }
+
+VIRAL_DISINFO_TROPES = [
+    (
+        re.compile(r"\b(?:share\s+before\s+(?:it\'?s\s+)?(?:deleted|removed|banned)|forwarded\s+(?:as\s+received|many\s+times)|viral\s+forward)\b", re.IGNORECASE),
+        "Viral Social Media Forward Archetype",
+        "HIGH_RISK",
+        "Urgent calls to share before deletion are typical markers of WhatsApp/social messaging hoaxes."
+    ),
+    (
+        re.compile(r"\b(?:unesco\s+(?:declared|named|awarded|certified)\s+.*(?:best|cleanest|greatest|national\s+anthem))\b", re.IGNORECASE),
+        "Fabricated UNESCO Declaration Hoax",
+        "HIGH_RISK",
+        "UNESCO has officially clarified multiple times that it does not certify or rank national anthems, languages, or personal achievements."
+    ),
+    (
+        re.compile(r"\b(?:nasa\s+(?:warns|confirms?|announced?)\s+.*(?:darkness|meteor|world\s+will\s+end|holidays?))\b", re.IGNORECASE),
+        "Apocalyptic / Pseudo-NASA Hoax Archetype",
+        "HIGH_RISK",
+        "Claims of impending global darkness or apocalyptic events falsely attributed to NASA are recurring viral disinformation."
+    ),
+    (
+        re.compile(r"\b(?:doctors?\s+(?:don\'?t\s+want\s+you\s+to\s+know|are\s+hiding\s+this)|big\s+pharma\s+(?:is\s+censoring|secret)|cures?\s+all\s+cancers?)\b", re.IGNORECASE),
+        "Pseudomedical Panacea / Conspiracy Trope",
+        "HIGH_RISK",
+        "Claims attributing universal medical cures to secret herbs while alleging censorship are hallmarks of health disinformation."
+    ),
+    (
+        re.compile(r"\b(?:microchips?\s+(?:in|inside)\s+vaccines?|5g\s+(?:electromagnetic\s+)?mind\s+control|activated\s+by\s+5g)\b", re.IGNORECASE),
+        "Technological Paranoia / Microchip Conspiracy",
+        "HIGH_RISK",
+        "Refuted conspiracy theory linking telecommunications or public health immunizations to covert biometric tracking."
+    )
+]
+
+def detect_disinformation_tropes(text: str) -> list:
+    """Identify matching real-world viral disinformation patterns."""
+    matched = []
+    for pat, name, severity, explanation in VIRAL_DISINFO_TROPES:
+        if pat.search(text):
+            matched.append({
+                "trope_name": name,
+                "label": name,
+                "severity": severity,
+                "explanation": explanation,
+                "description": explanation
+            })
+    return matched
+
 DEATH_TERMS = {
     "dead", "died", "dies", "death", "killed", "assassinated", "murdered", "passed away", "succumbs"
 }
@@ -533,6 +684,34 @@ def query_wikipedia_grounding(entity_candidate: str, full_claim_text: str) -> di
         return None
 
 
+def ground_multiple_entities(text: str, max_entities: int = 3) -> list:
+    """
+    Extract and authoritatively ground multiple real-world entities (Persons, Organizations, Science, Locations)
+    using concurrent requests to the Wikipedia Knowledge Graph.
+    """
+    candidates = extract_potential_entities(text)
+    if not candidates:
+        return []
+        
+    grounded = []
+    with ThreadPoolExecutor(max_workers=min(max_entities, len(candidates))) as executor:
+        futures = {executor.submit(query_wikipedia_grounding, cand, text): cand for cand in candidates[:max_entities]}
+        for f in as_completed(futures):
+            try:
+                res = f.result()
+                if res and res.get("is_grounded"):
+                    grounded.append({
+                        "entity": res["entity"],
+                        "description": res.get("description", "Verified Entity"),
+                        "extract_snippet": res.get("extract_snippet", ""),
+                        "url": res.get("url", "https://en.wikipedia.org"),
+                        "matching_keywords": res.get("matching_keywords", [])
+                    })
+            except Exception:
+                pass
+    return grounded
+
+
 GOV_ACTION_TERMS = {
     "announces", "announced", "ex-gratia", "condoles", "condoled", "condolence",
     "condolences", "mourns", "mourned", "grief", "grieves", "tribute", "relief",
@@ -738,6 +917,22 @@ def verify_article_on_web(text: str) -> dict:
     if gk_info:
         elapsed_ms = round((time.time() - t_start) * 1000, 2)
         is_fake = (gk_info["verdict"] == "FAKE")
+        evidence_matrix = {
+            "cross_source_consensus": "CONTRADICTED_BY_WORLD_GK" if is_fake else "VERIFIED_BY_WORLD_GK",
+            "corroborating_sources_count": 1 if not is_fake else 0,
+            "credible_outlets_count": 1 if not is_fake else 0,
+            "average_domain_trust": 99.0 if not is_fake else 15.0,
+            "top_trust_tier": "Tier 1: Global Reference",
+            "grounded_entities_count": 1,
+            "red_flags": [],
+            "scientific_consensus": "CONTRADICTED" if is_fake and "scientific" in gk_info.get("explanation", "").lower() else "ESTABLISHED"
+        }
+        grounded_entities = [{
+            "entity": gk_info.get("person") or gk_info.get("office", "World Knowledge"),
+            "description": gk_info.get("actual_incumbent", "Encyclopedic verification"),
+            "extract_snippet": gk_info["explanation"],
+            "url": "https://en.wikipedia.org"
+        }]
         return {
             "status": "SUCCESS",
             "query_used": query,
@@ -747,6 +942,7 @@ def verify_article_on_web(text: str) -> dict:
             "gk_info": gk_info,
             "sources_count": 0,
             "credible_sources_count": 0,
+            "average_domain_trust": 99.0 if not is_fake else 15.0,
             "fact_checks": [],
             "live_sources": [],
             "wikipedia_grounding": {
@@ -756,6 +952,9 @@ def verify_article_on_web(text: str) -> dict:
                 "url": "https://en.wikipedia.org",
                 "is_grounded": not is_fake
             },
+            "grounded_entities": grounded_entities,
+            "red_flags": [],
+            "evidence_matrix": evidence_matrix,
             "web_summary": gk_info["explanation"],
             "verification_time_ms": elapsed_ms
         }
@@ -764,13 +963,16 @@ def verify_article_on_web(text: str) -> dict:
     fact_checks = []
     raw_sources = []
     wiki_grounding = None
+    grounded_entities = []
+    red_flags = detect_disinformation_tropes(text)
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=6) as executor:
         # Submit tasks
         future_fc = executor.submit(query_google_fact_check, query)
         future_gnews = executor.submit(query_gnews_api, query) if GNEWS_API_KEY else None
         future_newsapi = executor.submit(query_news_api, query) if NEWS_API_KEY else None
         future_rss = executor.submit(query_google_news_rss, query)
+        future_entities = executor.submit(ground_multiple_entities, text)
         
         # Wikipedia entity task
         future_wiki = None
@@ -799,6 +1001,23 @@ def verify_article_on_web(text: str) -> dict:
         except Exception:
             wiki_grounding = None
 
+        try:
+            grounded_entities = future_entities.result() or []
+        except Exception:
+            grounded_entities = []
+
+    # If primary wiki_grounding is missing but grounded_entities exists, promote first entity
+    if not wiki_grounding and grounded_entities:
+        e = grounded_entities[0]
+        wiki_grounding = {
+            "entity": e["entity"],
+            "description": e["description"],
+            "extract_snippet": e["extract_snippet"],
+            "url": e["url"],
+            "is_grounded": True,
+            "matching_keywords": e.get("matching_keywords", [])
+        }
+
     # Filter semantically relevant headlines vs debunking refutations
     relevant_sources = []
     debunking_sources = []
@@ -807,6 +1026,10 @@ def verify_article_on_web(text: str) -> dict:
         title = s.get("title", "")
         if title not in seen_titles:
             seen_titles.add(title)
+            # Evaluate domain credibility
+            cred = evaluate_domain_credibility(s.get("source", ""), s.get("url", ""))
+            s["credibility"] = cred
+            
             if check_headline_refutation(query_words, title):
                 debunking_sources.append(s)
             elif is_headline_semantically_relevant(query_words, title):
@@ -831,8 +1054,18 @@ def verify_article_on_web(text: str) -> dict:
     # Check credible domain matches
     credible_matches = sum(
         1 for src in relevant_sources
-        if any(dom in (src.get("source", "") + " " + src.get("url", "")).lower() for dom in CREDIBLE_DOMAINS)
+        if src.get("credibility", {}).get("is_reputable") or any(dom in (src.get("source", "") + " " + src.get("url", "")).lower() for dom in CREDIBLE_DOMAINS)
     )
+
+    # Calculate average domain credibility
+    if relevant_sources:
+        avg_domain_trust = round(sum(s.get("credibility", {}).get("trust_score", 75) for s in relevant_sources) / len(relevant_sources), 1)
+    elif wiki_grounding and wiki_grounding.get("is_grounded"):
+        avg_domain_trust = 98.0
+    elif is_debunked or red_flags:
+        avg_domain_trust = 20.0
+    else:
+        avg_domain_trust = 0.0
 
     is_uncorroborated_hoax = False
 
@@ -845,6 +1078,10 @@ def verify_article_on_web(text: str) -> dict:
             summary = f"Actively debunked and refuted by news reporting ({deb_src.get('source', 'Fact Check')}): '{deb_src.get('title', '')}'."
         else:
             summary = "Flagged as debunked disinformation by verified news and fact-checking authorities."
+    elif red_flags and not has_relevant_news:
+        is_uncorroborated_hoax = True
+        verdict = "DISINFORMATION_TROPE_DETECTED"
+        summary = f"Real-world disinformation pattern detected: {red_flags[0]['trope_name']}. {red_flags[0]['explanation']}"
     elif is_critical and not has_relevant_news:
         is_uncorroborated_hoax = True
         verdict = "UNCORROBORATED_CRITICAL_CLAIM"
@@ -866,6 +1103,19 @@ def verify_article_on_web(text: str) -> dict:
 
     elapsed_ms = round((time.time() - t_start) * 1000, 2)
 
+    top_tier = relevant_sources[0]["credibility"]["tier"] if relevant_sources else ("Tier 1: Global Reference" if (wiki_grounding and wiki_grounding.get("is_grounded")) else "Unrated")
+
+    evidence_matrix = {
+        "cross_source_consensus": "STRONG_CORROBORATION" if credible_matches >= 2 else ("CORROBORATED" if has_relevant_news else ("DEBUNKED" if is_debunked else ("DISINFORMATION_TROPE" if red_flags else "UNVERIFIED"))),
+        "corroborating_sources_count": len(relevant_sources),
+        "credible_outlets_count": credible_matches,
+        "average_domain_trust": avg_domain_trust,
+        "top_trust_tier": top_tier,
+        "grounded_entities_count": len(grounded_entities),
+        "red_flags": red_flags,
+        "scientific_consensus": "ESTABLISHED" if any(p.search(text) for p, _ in SCIENTIFIC_CONSENSUS_DEBUNKS) else "NORMAL"
+    }
+
     return {
         "status": "SUCCESS",
         "query_used": query,
@@ -874,9 +1124,13 @@ def verify_article_on_web(text: str) -> dict:
         "is_uncorroborated_hoax": is_uncorroborated_hoax,
         "sources_count": len(relevant_sources),
         "credible_sources_count": credible_matches,
+        "average_domain_trust": avg_domain_trust,
         "fact_checks": fact_checks,
         "live_sources": relevant_sources[:4],
         "wikipedia_grounding": wiki_grounding,
+        "grounded_entities": grounded_entities,
+        "red_flags": red_flags,
+        "evidence_matrix": evidence_matrix,
         "web_summary": summary,
         "verification_time_ms": elapsed_ms
     }

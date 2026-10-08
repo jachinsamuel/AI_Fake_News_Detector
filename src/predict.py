@@ -192,6 +192,12 @@ class FakeNewsPredictor:
                         else:
                             final_explanation = web_info.get("web_summary") or "Flagged as debunked disinformation by verified news and fact-checking authorities."
 
+                    # Case 1.5: Matched viral disinformation pattern / trope
+                    elif web_info.get("web_verdict") == "DISINFORMATION_TROPE_DETECTED" or web_info.get("red_flags"):
+                        final_prediction = "FAKE"
+                        final_confidence = 96.8
+                        final_explanation = web_info.get("web_summary") or "Matched recognized viral social media disinformation trope with zero credible news corroboration."
+
                     # Case 2: Uncorroborated critical event claim (death / assassination / arrest hoaxes)
                     elif web_info.get("is_uncorroborated_hoax") or web_info.get("web_verdict") == "UNCORROBORATED_CRITICAL_CLAIM":
                         final_prediction = "FAKE"
@@ -208,7 +214,7 @@ class FakeNewsPredictor:
                     # Case 4: Corroborated by live news coverage on news wires
                     elif web_info.get("credible_sources_count", 0) >= 1 or web_info.get("web_verdict") == "CORROBORATED_BY_LIVE_NEWS" or web_info.get("sources_count", 0) >= 1:
                         final_prediction = "REAL"
-                        final_confidence = round(min(97.5, max(confidence_pct + 42.0, 93.8)), 2)
+                        final_confidence = round(min(98.2, max(confidence_pct + 42.0, 94.5)), 2)
                         lead_source = web_info["live_sources"][0]["source"] if web_info.get("live_sources") else "Verified News Wires"
                         if len(web_info.get("live_sources", [])) > 1:
                             final_explanation = f"Corroborated by live news coverage across {len(web_info.get('live_sources', []))} major news sources including {lead_source}."
@@ -244,6 +250,10 @@ class FakeNewsPredictor:
             elif has_journalistic_attribution and final_prediction == "REAL":
                 final_confidence = round(min(98.5, max(final_confidence, 93.5)), 2)
         
+        # Calibration boost based on real-world domain trust
+        if web_info and web_info.get("average_domain_trust", 0) >= 90 and final_prediction == "REAL":
+            final_confidence = round(min(99.0, max(final_confidence, 96.0)), 2)
+
         elapsed_ms = round((time.time() - t0) * 1000, 2)
         
         result_payload = {
@@ -257,13 +267,16 @@ class FakeNewsPredictor:
             "disclaimer": xai_info["disclaimer"],
             "stylometry": stylometry_info,
             "web_verification": web_info,
+            "evidence_matrix": web_info.get("evidence_matrix") if web_info else None,
+            "grounded_entities": web_info.get("grounded_entities", []) if web_info else [],
+            "red_flags": web_info.get("red_flags", []) if web_info else [],
             "cached": False,
+            "processing_time_ms": elapsed_ms,
             "stats": {
                 "word_count": word_count,
                 "char_count": char_count,
                 "cleaned_tokens_count": len(clean_text.split())
             },
-            "processing_time_ms": elapsed_ms
         }
 
         # Store in LRU cache

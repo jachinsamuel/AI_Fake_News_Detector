@@ -139,9 +139,12 @@ def predict():
             "disclaimer": result["disclaimer"],
             "stylometry": result.get("stylometry"),
             "web_verification": result.get("web_verification"),
+            "evidence_matrix": result.get("evidence_matrix"),
+            "grounded_entities": result.get("grounded_entities", []),
+            "red_flags": result.get("red_flags", []),
             "stats": result["stats"],
             "cached": result.get("cached", False),
-            "processing_time_ms": result["processing_time_ms"]
+            "processing_time_ms": result.get("processing_time_ms", 0.0)
         }), 200
 
     except Exception as e:
@@ -255,6 +258,9 @@ def export_report():
     generated_at = time.strftime("%B %d, %Y • %H:%M:%S UTC")
     
     web_data = data.get("web_verification") or {}
+    evidence_matrix = data.get("evidence_matrix") or web_data.get("evidence_matrix") or {}
+    grounded_entities = data.get("grounded_entities") or web_data.get("grounded_entities") or []
+    red_flags = data.get("red_flags") or web_data.get("red_flags") or []
     wiki_data = web_data.get("wikipedia_grounding") or {}
     live_sources = web_data.get("live_sources") or []
     fact_checks = web_data.get("fact_checks") or []
@@ -269,6 +275,9 @@ def export_report():
         input_text=data.get("input_text", ""),
         explanation=data.get("explanation", ""),
         feature_details=data.get("feature_details", []),
+        evidence_matrix=evidence_matrix,
+        grounded_entities=grounded_entities,
+        red_flags=red_flags,
         wiki=wiki_data,
         live_sources=live_sources,
         fact_checks=fact_checks

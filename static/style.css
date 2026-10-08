@@ -1344,6 +1344,239 @@ kbd {
     font-weight: 600;
 }
 
+/* ==========================================================================
+   Real-World Evidence Matrix, Domain Trust & Disinformation Red Flags
+   ========================================================================== */
+.evidence-matrix-card {
+    background: #F8FAFC;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.evidence-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.evidence-title-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: var(--text-main);
+}
+
+.evidence-icon {
+    font-size: 1rem;
+}
+
+.evidence-consensus-badge {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 9px;
+    border-radius: 5px;
+    background-color: var(--real-bg);
+    color: var(--real-text);
+    border: 1px solid var(--real-border);
+}
+
+.evidence-consensus-badge.hoax,
+.evidence-consensus-badge.disputed {
+    background-color: var(--fake-bg);
+    color: var(--fake-text);
+    border-color: var(--fake-border);
+}
+
+.evidence-consensus-badge.neutral {
+    background-color: #F1F5F9;
+    color: var(--text-muted);
+    border-color: var(--border-color);
+}
+
+.evidence-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.evidence-metric-item {
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    box-shadow: var(--shadow-sm);
+}
+
+.ev-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ev-val {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Viral Disinformation Trope Red Flag Alert */
+.red-flag-alert {
+    background: #FFF1F2;
+    border: 1px solid #FECDD3;
+    border-left: 4px solid #E11D48;
+    border-radius: var(--radius-md);
+    padding: 13px 15px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 6px rgba(225, 29, 72, 0.05);
+}
+
+.red-flag-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.85rem;
+    color: #9F1239;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.red-flags-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.red-flag-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #881337;
+    line-height: 1.4;
+}
+
+.red-flag-badge {
+    background: #BE123C;
+    color: #FFFFFF;
+    font-size: 0.64rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-top: 1px;
+}
+
+/* Grounded Multi-Entity Chips */
+.grounded-entities-wrap {
+    margin-top: 13px;
+    padding-top: 11px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.entities-subtitle {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 7px;
+}
+
+.entities-chips-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.entity-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: #1E40AF;
+    transition: all 0.15s ease;
+}
+
+.entity-chip:hover {
+    background: #DBEAFE;
+    border-color: #93C5FD;
+}
+
+.entity-chip-name {
+    font-weight: 700;
+}
+
+.entity-chip-desc {
+    color: #475569;
+    font-weight: 400;
+    font-size: 0.71rem;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Real-World Source Domain Trust Badges */
+.source-trust-pill {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.source-trust-pill.trust-high {
+    background-color: #DCFCE7;
+    color: #166534;
+    border: 1px solid #86EFAC;
+}
+
+.source-trust-pill.trust-med {
+    background-color: #E0F2FE;
+    color: #075985;
+    border: 1px solid #7DD3FC;
+}
+
+.source-trust-pill.trust-low {
+    background-color: #F1F5F9;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+}
+
+.source-trust-pill.trust-flagged {
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FCA5A5;
+}
+
 .hidden {
     display: none !important;
 }

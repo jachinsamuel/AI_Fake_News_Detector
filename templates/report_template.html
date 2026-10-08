@@ -216,6 +216,83 @@
             color: #1E40AF;
         }
 
+        /* Real-World Evidence Matrix */
+        .evidence-matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin-bottom: 16px;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+        }
+
+        .evidence-matrix-table td {
+            padding: 8px 12px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .evidence-label {
+            font-weight: 700;
+            color: #475569;
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            width: 35%;
+        }
+
+        .evidence-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #0F172A;
+        }
+
+        /* Red Flags Alert */
+        .red-flag-alert {
+            background: #FFF1F2;
+            border: 1px solid #FECDD3;
+            border-left: 4px solid #E11D48;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            color: #881337;
+        }
+
+        .red-flag-badge {
+            background: #BE123C;
+            color: #FFFFFF;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        /* Entity Chips */
+        .entity-chip {
+            display: inline-block;
+            background: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #1E40AF;
+            margin: 2px 4px 2px 0;
+            font-weight: 600;
+        }
+        
+        .trust-badge-pill {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            margin-left: 6px;
+        }
+        .trust-high { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+        .trust-med { background: #E0F2FE; color: #075985; border: 1px solid #7DD3FC; }
+
         /* Sign-off / Disclaimer */
         .report-footer {
             margin-top: 24px;
@@ -296,14 +373,49 @@
             </div>
         </div>
 
+        {% if red_flags and red_flags|length > 0 %}
+        <!-- Real-World Disinformation Trope Warning -->
+        <div class="red-flag-alert">
+            <strong>⚠ Real-World Disinformation Trope Detected:</strong>
+            <ul style="margin: 6px 0 0 16px; list-style-type: disc;">
+                {% for rf in red_flags %}
+                <li style="margin-bottom: 4px;">
+                    <span class="red-flag-badge">{{ rf.severity or 'HOAX PATTERN' }}</span> <strong>{{ rf.trope_name or rf.label }}</strong>: {{ rf.explanation or rf.description }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <!-- Input Excerpt -->
         <h2 class="section-title">1. Target Text Excerpt</h2>
         <div class="input-excerpt">
             "{{ input_text }}"
         </div>
 
+        {% if evidence_matrix and (evidence_matrix.average_domain_trust is defined or evidence_matrix.domain_trust_score is defined or evidence_matrix.top_trust_tier or evidence_matrix.publisher_tier) %}
+        <!-- Real-World Evidence & Domain Trust Matrix -->
+        <h2 class="section-title">2. Real-World Evidence &amp; Domain Trust Matrix</h2>
+        <table class="evidence-matrix-table">
+            <tbody>
+                <tr>
+                    <td class="evidence-label">Domain Trust Index</td>
+                    <td class="evidence-value">{{ evidence_matrix.average_domain_trust or evidence_matrix.domain_trust_score or 0 }}% ({{ (evidence_matrix.cross_source_consensus or evidence_matrix.consensus or 'EVALUATED')|replace('_', ' ') }})</td>
+                    <td class="evidence-label">Publisher Tier</td>
+                    <td class="evidence-value">{{ evidence_matrix.top_trust_tier or evidence_matrix.publisher_tier or 'Unrated' }}</td>
+                </tr>
+                <tr>
+                    <td class="evidence-label">Corroborating Outlets</td>
+                    <td class="evidence-value">{{ evidence_matrix.corroborating_sources_count or evidence_matrix.corroborating_outlets_count or 0 }} Outlets</td>
+                    <td class="evidence-label">Scientific / Historical Consensus</td>
+                    <td class="evidence-value">{{ evidence_matrix.scientific_consensus or 'Standard' }}</td>
+                </tr>
+            </tbody>
+        </table>
+        {% endif %}
+
         <!-- Linguistic & XAI Feature Evidence -->
-        <h2 class="section-title">2. Linguistic &amp; Semantic Evidence (Explainable AI)</h2>
+        <h2 class="section-title">3. Linguistic &amp; Semantic Evidence (Explainable AI)</h2>
         <p style="font-size: 0.82rem; color: #475569; margin-bottom: 8px;">
             {{ explanation }}
         </p>
@@ -335,21 +447,33 @@
 
         <!-- Wikipedia Grounding -->
         {% if wiki and wiki.is_grounded %}
-        <h2 class="section-title">3. Wikipedia Encyclopedic Knowledge Grounding</h2>
+        <h2 class="section-title">4. Wikipedia Knowledge Graph Grounding</h2>
         <div class="wiki-box">
             <span class="wiki-title">📖 {{ wiki.entity }}</span>
             <p style="font-weight: 600; color: #1E3A8A; margin: 2px 0;">{{ wiki.description }}</p>
             <p style="color: #334155; font-size: 0.78rem;">{{ wiki.extract_snippet }}</p>
+
+            {% if grounded_entities and grounded_entities|length > 0 %}
+            <div style="margin-top: 8px; border-top: 1px dashed #BFDBFE; padding-top: 6px;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: #1E40AF; text-transform: uppercase;">Verified Entities Grounded:</span><br>
+                {% for ent in grounded_entities %}
+                <span class="entity-chip">{{ ent.entity }}{% if ent.description %} — {{ ent.description }}{% endif %}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         {% endif %}
 
         <!-- Live Web Sources -->
         {% if live_sources and live_sources|length > 0 %}
-        <h2 class="section-title">4. Real-World News Corroboration</h2>
+        <h2 class="section-title">5. Real-World News Corroboration &amp; Domain Verification</h2>
         {% for src in live_sources[:4] %}
         <div class="source-row">
             <div>
                 <span class="source-name">{{ src.source }}</span> — <span>{{ src.title }}</span>
+                {% if src.credibility and src.credibility.badge %}
+                <span class="trust-badge-pill {{ 'trust-high' if src.credibility.trust_score >= 85 else 'trust-med' }}">{{ src.credibility.badge }} • {{ src.credibility.trust_score }}%</span>
+                {% endif %}
             </div>
             <span class="source-url">{{ src.published_at }}</span>
         </div>
@@ -358,7 +482,7 @@
 
         <!-- Fact Check Ratings -->
         {% if fact_checks and fact_checks|length > 0 %}
-        <h2 class="section-title">5. Independent Fact-Checker Reviews</h2>
+        <h2 class="section-title">6. Independent Fact-Checker Reviews</h2>
         {% for fc in fact_checks[:3] %}
         <div class="source-row" style="background: #FEF2F2; border-color: #FECDD3;">
             <div>

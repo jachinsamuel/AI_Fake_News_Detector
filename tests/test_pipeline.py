@@ -390,5 +390,91 @@ class TestImageOcrEndpoint(unittest.TestCase):
         self.assertEqual(data["image_size"], "60x30")
 
 
+class TestRealWorldProofsAndCredibility(unittest.TestCase):
+    """Test Domain Credibility Registry, Viral Hoax Tropes, and Evidence Matrix."""
+
+    def test_domain_credibility_wires_and_science(self):
+        from src.web_verifier import evaluate_domain_credibility
+        reuters_cred = evaluate_domain_credibility("Reuters", "https://reuters.com/article/123")
+        self.assertGreaterEqual(reuters_cred["trust_score"], 95)
+        self.assertTrue(reuters_cred["is_reputable"])
+        self.assertFalse(reuters_cred["is_satire_or_disinfo"])
+
+        nature_cred = evaluate_domain_credibility("Nature Journal", "https://nature.com/articles/456")
+        self.assertGreaterEqual(nature_cred["trust_score"], 98)
+        self.assertIn("Scientific", nature_cred["tier"])
+
+    def test_domain_credibility_fact_checkers(self):
+        from src.web_verifier import evaluate_domain_credibility
+        snopes_cred = evaluate_domain_credibility("Snopes Fact Check", "https://snopes.com/fact-check/test")
+        self.assertGreaterEqual(snopes_cred["trust_score"], 95)
+        self.assertIn("Fact-Checker", snopes_cred["tier"])
+
+    def test_domain_credibility_satire_and_disinfo(self):
+        from src.web_verifier import evaluate_domain_credibility
+        onion_cred = evaluate_domain_credibility("The Onion", "https://theonion.com/funny-story")
+        self.assertLessEqual(onion_cred["trust_score"], 15)
+        self.assertTrue(onion_cred["is_satire_or_disinfo"])
+
+        infowars_cred = evaluate_domain_credibility("Infowars", "https://infowars.com/post")
+        self.assertLessEqual(infowars_cred["trust_score"], 10)
+        self.assertTrue(infowars_cred["is_satire_or_disinfo"])
+
+    def test_viral_disinformation_tropes_detection(self):
+        from src.web_verifier import detect_disinformation_tropes
+        unesco_hoax = "UNESCO declared Indian national anthem Jana Gana Mana as best in the world!"
+        tropes = detect_disinformation_tropes(unesco_hoax)
+        self.assertGreater(len(tropes), 0)
+        self.assertTrue(any("UNESCO" in t["label"] for t in tropes))
+
+        cure_hoax = "Miracle herbal fruit cures 100% stage 4 cancer share before deleted by pharma"
+        tropes2 = detect_disinformation_tropes(cure_hoax)
+        self.assertGreater(len(tropes2), 0)
+
+        legit_text = "Federal Reserve chairman delivers remarks on interest rates and monetary policy."
+        tropes_clean = detect_disinformation_tropes(legit_text)
+        self.assertEqual(len(tropes_clean), 0)
+
+    def test_export_report_with_evidence_matrix(self):
+        from app import app
+        client = app.test_client()
+        payload = {
+            "prediction": "REAL",
+            "confidence": 98.5,
+            "model": "Soft-Voting Ensemble",
+            "input_text": "NASA James Webb Space Telescope discovers ancient galaxy cluster.",
+            "explanation": "Corroborated by high-trust scientific domains.",
+            "feature_details": [{"word": "telescope", "direction": "REAL", "impact": "High", "score": 0.8}],
+            "evidence_matrix": {
+                "domain_trust_score": 98.0,
+                "publisher_tier": "Tier 1: Global Wire / Scientific",
+                "consensus": "Corroborated",
+                "corroborating_outlets_count": 3,
+                "scientific_consensus": "Established Fact"
+            },
+            "grounded_entities": [
+                {"entity": "James Webb Space Telescope", "description": "Space observatory"}
+            ],
+            "red_flags": [],
+            "web_verification": {
+                "live_sources": [
+                    {
+                        "source": "NASA",
+                        "title": "Webb reveals early universe",
+                        "published_at": "Today",
+                        "credibility": {"badge": "Scientific", "trust_score": 99}
+                    }
+                ]
+            }
+        }
+        resp = client.post("/export-report", data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.data.decode("utf-8")
+        self.assertIn("FACT-CHECK VERIFICATION CERTIFICATE", html)
+        self.assertIn("Real-World Evidence &amp; Domain Trust Matrix", html)
+        self.assertIn("James Webb Space Telescope", html)
+
+
 if __name__ == "__main__":
     unittest.main()
+
