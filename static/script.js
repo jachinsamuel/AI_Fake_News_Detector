@@ -70,27 +70,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const factChecksContainer = document.getElementById("fact-checks-container");
     const factChecksList = document.getElementById("fact-checks-list");
 
-    // Real-World Evidence Matrix & Red Flag Elements
-    const evidenceMatrixBox = document.getElementById("evidence-matrix-box");
-    const evidenceConsensusBadge = document.getElementById("evidence-consensus-badge");
-    const domainTrustVal = document.getElementById("domain-trust-val");
-    const publisherTierVal = document.getElementById("publisher-tier-val");
-    const outletsCountVal = document.getElementById("outlets-count-val");
-    const knowledgeConsensusVal = document.getElementById("knowledge-consensus-val");
+    // Red Flag & Entity Elements
     const redFlagsBox = document.getElementById("red-flags-box");
     const redFlagsList = document.getElementById("red-flags-list");
     const groundedEntitiesWrap = document.getElementById("grounded-entities-wrap");
     const groundedEntitiesList = document.getElementById("grounded-entities-list");
-
-    // Forensic Stylometry Elements
-    const stylometryBox = document.getElementById("stylometry-box");
-    const styleVerdictBadge = document.getElementById("style-verdict-badge");
-    const sensationalismBar = document.getElementById("sensationalism-bar");
-    const sensationalismVal = document.getElementById("sensationalism-val");
-    const attributionBar = document.getElementById("attribution-bar");
-    const attributionVal = document.getElementById("attribution-val");
-    const lexicalPill = document.getElementById("lexical-pill");
-    const punctPill = document.getElementById("punct-pill");
 
     const telemetryLatency = document.getElementById("telemetry-latency");
     const telemetryCache = document.getElementById("telemetry-cache");
@@ -491,7 +475,6 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTextStats();
         hideError();
         resultCard.classList.add("hidden");
-        if (stylometryBox) stylometryBox.classList.add("hidden");
         newsInput.focus();
     });
 
@@ -640,38 +623,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (groundedEntitiesWrap) groundedEntitiesWrap.classList.add("hidden");
         }
 
-        // Real-World Evidence Matrix
-        const ev = data.evidence_matrix || (web && web.evidence_matrix);
-        if (ev && evidenceMatrixBox) {
-            evidenceMatrixBox.classList.remove("hidden");
-            if (evidenceConsensusBadge) {
-                evidenceConsensusBadge.textContent = (ev.cross_source_consensus || "CORROBORATED").replace(/_/g, " ");
-                evidenceConsensusBadge.className = "evidence-consensus-badge";
-                if (ev.cross_source_consensus && (ev.cross_source_consensus.includes("STRONG") || ev.cross_source_consensus.includes("VERIFIED"))) {
-                    evidenceConsensusBadge.classList.add("consensus-strong");
-                } else if (ev.cross_source_consensus && (ev.cross_source_consensus.includes("DEBUNK") || ev.cross_source_consensus.includes("CONTRADICT") || ev.cross_source_consensus.includes("TROPE"))) {
-                    evidenceConsensusBadge.classList.add("consensus-debunked");
-                } else {
-                    evidenceConsensusBadge.classList.add("consensus-neutral");
-                }
-            }
-            if (domainTrustVal) {
-                const trust = ev.average_domain_trust || 0;
-                domainTrustVal.textContent = `${trust}% ${trust >= 85 ? '(High Trust)' : trust > 0 ? '(Moderate)' : '(Uncorroborated)'}`;
-            }
-            if (publisherTierVal) {
-                publisherTierVal.textContent = ev.top_trust_tier || "Unrated";
-            }
-            if (outletsCountVal) {
-                outletsCountVal.textContent = `${ev.corroborating_sources_count || 0} Outlets (${ev.credible_outlets_count || 0} High-Credibility)`;
-            }
-            if (knowledgeConsensusVal) {
-                knowledgeConsensusVal.textContent = ev.scientific_consensus === "CONTRADICTED" ? "Contradicted by Science" : (ev.scientific_consensus === "ESTABLISHED" ? "Established Science" : "Standard Consensus");
-            }
-        } else if (evidenceMatrixBox) {
-            evidenceMatrixBox.classList.add("hidden");
-        }
-
         // Real-World Disinformation Red Flags Alert
         const rFlags = data.red_flags || (web && web.red_flags) || [];
         if (rFlags.length > 0 && redFlagsBox && redFlagsList) {
@@ -691,55 +642,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         } else if (redFlagsBox) {
             redFlagsBox.classList.add("hidden");
-        }
-
-        // Forensic Stylometry Breakdown
-        const sty = data.stylometry;
-        if (sty && stylometryBox) {
-            stylometryBox.classList.remove("hidden");
-            styleVerdictBadge.textContent = sty.style_verdict || "Neutral";
-            
-            // Style badge appearance
-            styleVerdictBadge.className = "style-badge";
-            if (sty.style_verdict.includes("Clickbait") || sty.sensationalism_level === "High") {
-                styleVerdictBadge.classList.add("style-clickbait");
-            } else if (sty.style_verdict.includes("Journalistic") || sty.attribution_level === "High") {
-                styleVerdictBadge.classList.add("style-journalistic");
-            } else {
-                styleVerdictBadge.classList.add("style-neutral");
-            }
-
-            // Sensationalism meter
-            const sensPct = Math.min(100, Math.round(sty.sensationalism_density * 100));
-            sensationalismBar.style.width = `${Math.max(4, sensPct)}%`;
-            sensationalismVal.textContent = `${sty.sensationalism_level} (${sensPct}%)`;
-            if (sty.sensationalism_level === "High") {
-                sensationalismBar.style.backgroundColor = "#ef4444";
-            } else if (sty.sensationalism_level === "Moderate") {
-                sensationalismBar.style.backgroundColor = "#f59e0b";
-            } else {
-                sensationalismBar.style.backgroundColor = "#10b981";
-            }
-
-            // Attribution meter
-            const attrPct = Math.min(100, Math.round(sty.attribution_score * 100));
-            attributionBar.style.width = `${Math.max(4, attrPct)}%`;
-            attributionVal.textContent = `${sty.attribution_level} (${attrPct}%)`;
-
-            // Lexical Diversity
-            const ttrPct = Math.round(sty.lexical_diversity * 100);
-            lexicalPill.textContent = `${ttrPct}% TTR`;
-
-            // Punctuation & Caps
-            if (sty.punctuation_dramatism > 0.35 || sty.uppercase_ratio > 0.2) {
-                punctPill.textContent = "Elevated / Dramatic";
-                punctPill.className = "metric-pill pill-warn";
-            } else {
-                punctPill.textContent = "Objective / Standard";
-                punctPill.className = "metric-pill pill-ok";
-            }
-        } else if (stylometryBox) {
-            stylometryBox.classList.add("hidden");
         }
 
         // Live Web Verification & Sources
