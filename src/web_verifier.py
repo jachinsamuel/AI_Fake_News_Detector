@@ -351,7 +351,15 @@ CURE_TERMS = {
     "miracle cure", "cures all", "cures cancer", "secret herb", "reverses aging", "miracle herb"
 }
 
-CRITICAL_CLAIM_TERMS = DEATH_TERMS.union(ARREST_TERMS).union(CURE_TERMS).union({
+MILITARY_ATTACK_TERMS = {
+    "bomb", "bombed", "bombing", "bombs", "airstrike", "airstrikes", "air strike", "air strikes",
+    "invade", "invaded", "invades", "invading", "invasion",
+    "attack", "attacked", "attacks", "attacking",
+    "missile", "missiles", "nuke", "nuked", "nuclear",
+    "declared war", "declares war", "declaration of war"
+}
+
+CRITICAL_CLAIM_TERMS = DEATH_TERMS.union(ARREST_TERMS).union(CURE_TERMS).union(MILITARY_ATTACK_TERMS).union({
     "resigned", "resigns", "hoax", "alien", "mind control", "5g"
 })
 
@@ -773,9 +781,25 @@ def is_headline_semantically_relevant(query_words: list, title: str) -> bool:
             has_arr = any(a in title_lower for a in ARREST_TERMS)
             return has_subj and has_arr
 
-    # 3. General Semantic Match
-    matching_count = sum(1 for w in query_words if w in title_lower and len(w) > 2)
-    return matching_count >= max(1, len(query_words) // 3)
+    # 3. Military Attack / Strike / Bombing Specific Check
+    has_attack_in_query = any(a in query_words for a in MILITARY_ATTACK_TERMS)
+    if has_attack_in_query:
+        attack_roots = {"bomb", "bombed", "bombing", "bombs", "strike", "strikes", "attack", "attacked", "attacks", "missile", "airstrike", "invasion", "invaded"}
+        has_attack_in_title = any(ar in title_lower for ar in attack_roots)
+        if not has_attack_in_title:
+            return False
+        # Reject headlines that are purely diplomatic/peace talk terms without an attack
+        if any(peace in title_lower for peace in ["ceasefire", "peace talk", "summit", "truce", "diplomacy"]) and not any(k in title_lower for k in ["launches", "bombs", "strikes", "attacks"]):
+            return False
+
+    # 4. General Semantic Match (Strict Content Word Overlap)
+    content_words = [w for w in query_words if len(w) > 2 and w not in COMMON_STOPWORDS]
+    if not content_words:
+        return True
+    matching_count = sum(1 for w in content_words if w in title_lower)
+    if len(content_words) <= 3:
+        return matching_count >= min(len(content_words), 2)
+    return matching_count >= max(2, int(len(content_words) * 0.6))
 
 
 def query_google_fact_check(query: str) -> list:
@@ -1085,7 +1109,12 @@ def verify_article_on_web(text: str) -> dict:
     elif is_critical and not has_relevant_news:
         is_uncorroborated_hoax = True
         verdict = "UNCORROBORATED_CRITICAL_CLAIM"
-        summary = "Uncorroborated sensational claim / death rumor. If this major event were true, every global news wire would report it. Zero matching news reports confirm this claim."
+        if any(w in MILITARY_ATTACK_TERMS for w in query_words):
+            summary = "Uncorroborated military attack / warfare claim. If this geopolitical attack had occurred, global news wires (Reuters, AP, BBC, Al Jazeera) would be continuously broadcasting it. Zero credible news sources report any such attack."
+        elif any(w in DEATH_TERMS for w in query_words):
+            summary = "Uncorroborated death / assassination rumor. If this major event were true, every global news wire would report it. Zero matching news reports confirm this claim."
+        else:
+            summary = "Uncorroborated sensational claim. If this major event were true, international news wires would report it. Zero matching news reports confirm this claim."
     elif wiki_grounding and wiki_grounding.get("is_grounded"):
         verdict = "GROUNDED_BY_WIKIPEDIA_AND_NEWS" if has_relevant_news else "GROUNDED_BY_WIKIPEDIA"
         desc = wiki_grounding.get("description") or "verified encyclopedic entry"

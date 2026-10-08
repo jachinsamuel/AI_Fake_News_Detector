@@ -198,11 +198,11 @@ class FakeNewsPredictor:
                         final_confidence = 96.8
                         final_explanation = web_info.get("web_summary") or "Matched recognized viral social media disinformation trope with zero credible news corroboration."
 
-                    # Case 2: Uncorroborated critical event claim (death / assassination / arrest hoaxes)
+                    # Case 2: Uncorroborated critical event claim (death / assassination / arrest / military hoaxes)
                     elif web_info.get("is_uncorroborated_hoax") or web_info.get("web_verdict") == "UNCORROBORATED_CRITICAL_CLAIM":
                         final_prediction = "FAKE"
-                        final_confidence = 95.8
-                        final_explanation = "Uncorroborated sensational claim / death rumor. If this major event were real, every international news wire would report it. Zero credible news sources confirm this claim."
+                        final_confidence = 96.5
+                        final_explanation = web_info.get("web_summary") or "Uncorroborated sensational claim / breaking event rumor. If this major event were real, every international news wire would report it. Zero credible news sources confirm this claim."
 
                     # Case 3: Authoritatively grounded in Wikipedia encyclopedic world knowledge
                     elif web_info.get("wikipedia_grounding") and web_info["wikipedia_grounding"].get("is_grounded"):
