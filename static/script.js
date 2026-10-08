@@ -577,7 +577,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resultCard.classList.add(isReal ? "is-real" : "is-fake");
 
         // Verdict & Model
-        verdictTag.textContent = isReal ? "✓ REAL NEWS" : "⚠ FAKE NEWS";
+        verdictTag.textContent = isReal ? "REAL NEWS" : "FAKE NEWS";
         statModel.textContent = data.model || "Ensemble Classifier";
 
         // Confidence
@@ -627,7 +627,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     chip.rel = "noopener noreferrer";
                     chip.className = "entity-chip";
                     chip.innerHTML = `
-                        <span class="entity-chip-name">🏛️ ${ent.entity}</span>
+                        <span class="entity-chip-name">${ent.entity}</span>
                         <span class="entity-chip-desc">${ent.description}</span>
                     `;
                     groundedEntitiesList.appendChild(chip);
@@ -883,7 +883,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const copyContent = `[${verdict} • ${lastAnalysisData.confidence}%]\n"${textSample}..."\n\nExplanation: ${lastAnalysisData.explanation}\n\nVerified by AI Fake News Detector with Live Web AI`;
             navigator.clipboard.writeText(copyContent).then(() => {
                 const orig = copySummaryBtn.innerHTML;
-                copySummaryBtn.innerHTML = "<span>✓</span><span>Copied!</span>";
+                copySummaryBtn.innerHTML = "<span>Copied!</span>";
                 setTimeout(() => { copySummaryBtn.innerHTML = orig; }, 2000);
             });
         });

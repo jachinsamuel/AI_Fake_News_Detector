@@ -341,7 +341,7 @@
 </head>
 <body>
     <div class="print-btn-bar">
-        <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        <button type="button" class="btn-print" onclick="window.print()">Print / Save as PDF</button>
     </div>
 
     <div class="report-sheet">
@@ -361,7 +361,7 @@
         <div class="summary-card">
             <div>
                 <span class="verdict-tag {{ 'verdict-real' if prediction == 'REAL' else 'verdict-fake' }}">
-                    {{ '✓ VERIFIED REAL NEWS' if prediction == 'REAL' else '⚠ DETECTED FAKE NEWS' }}
+                    {{ 'VERIFIED REAL NEWS' if prediction == 'REAL' else 'DETECTED FAKE NEWS' }}
                 </span>
                 <p style="margin-top: 6px; font-size: 0.82rem; color: #475569;">
                     Model Architecture: <strong>{{ model_used }}</strong>
@@ -376,7 +376,7 @@
         {% if red_flags and red_flags|length > 0 %}
         <!-- Real-World Disinformation Trope Warning -->
         <div class="red-flag-alert">
-            <strong>⚠ Real-World Disinformation Trope Detected:</strong>
+            <strong>Real-World Disinformation Trope Detected:</strong>
             <ul style="margin: 6px 0 0 16px; list-style-type: disc;">
                 {% for rf in red_flags %}
                 <li style="margin-bottom: 4px;">
@@ -449,7 +449,7 @@
         {% if wiki and wiki.is_grounded %}
         <h2 class="section-title">4. Wikipedia Knowledge Graph Grounding</h2>
         <div class="wiki-box">
-            <span class="wiki-title">📖 {{ wiki.entity }}</span>
+            <span class="wiki-title">{{ wiki.entity }}</span>
             <p style="font-weight: 600; color: #1E3A8A; margin: 2px 0;">{{ wiki.description }}</p>
             <p style="color: #334155; font-size: 0.78rem;">{{ wiki.extract_snippet }}</p>
 
