@@ -392,7 +392,13 @@ MILITARY_ATTACK_TERMS = {
     "declared war", "declares war", "declaration of war"
 }
 
-CRITICAL_CLAIM_TERMS = DEATH_TERMS.union(ARREST_TERMS).union(CURE_TERMS).union(MILITARY_ATTACK_TERMS).union({
+CRIMINAL_ACCUSATION_TERMS = {
+    "pedophile", "pedophilia", "paedophile", "paedophilia", "rapist", "rape", "raped",
+    "sexual assault", "molester", "molest", "molested", "child abuse", "trafficker",
+    "trafficking", "murderer", "murder", "murdered"
+}
+
+CRITICAL_CLAIM_TERMS = DEATH_TERMS.union(ARREST_TERMS).union(CURE_TERMS).union(MILITARY_ATTACK_TERMS).union(CRIMINAL_ACCUSATION_TERMS).union({
     "resigned", "resigns", "hoax", "alien", "mind control", "5g"
 })
 
@@ -801,10 +807,10 @@ def check_headline_refutation(query_words: list, title: str) -> bool:
     return matches >= max(1, len(content_words) // 2)
 
 
-def is_headline_semantically_relevant(query_words: list, title: str) -> bool:
+def is_headline_semantically_relevant(query_words: list, title: str, entity_candidates: list = None) -> bool:
     """
     Ensure a returned news article actually matches the core claim of the query.
-    Detects false positives like 'PM Modi announces ex-gratia for 11 dead' when query is 'Modi is dead'.
+    Detects false positives where articles about an entity do not match the specific claim asserted.
     """
     title_lower = title.lower()
     
@@ -848,10 +854,34 @@ def is_headline_semantically_relevant(query_words: list, title: str) -> bool:
         if any(peace in title_lower for peace in ["ceasefire", "peace talk", "summit", "truce", "diplomacy"]) and not any(k in title_lower for k in ["launches", "bombs", "strikes", "attacks"]):
             return False
 
-    # 4. General Semantic Match (Strict Content Word Overlap)
+    # 3.5 Criminal / Severe Defamatory Allegation Check
+    has_criminal_in_query = any(c in query_words for c in CRIMINAL_ACCUSATION_TERMS)
+    if has_criminal_in_query:
+        crim_roots = {"pedophile", "pedophilia", "paedophile", "paedophilia", "rape", "raped", "rapist", "sexual assault", "molest", "molested", "child abuse", "trafficking", "trafficker", "murderer", "murder"}
+        if not any(cr in title_lower for cr in crim_roots):
+            return False
+
+    # 4. Predicate-Aware Semantic Match
     content_words = [w for w in query_words if len(w) > 2 and w not in COMMON_STOPWORDS]
     if not content_words:
         return True
+
+    # Extract subject tokens vs predicate tokens
+    entity_tokens = set()
+    if entity_candidates:
+        for ent in entity_candidates:
+            for w in ent.lower().split():
+                if len(w) > 2 and w not in COMMON_STOPWORDS:
+                    entity_tokens.add(w)
+
+    predicate_words = [w for w in content_words if w not in entity_tokens]
+    
+    # If claim has an entity AND a non-entity predicate, the headline MUST match at least one predicate root
+    if entity_tokens and predicate_words:
+        has_predicate_match = any(pw in title_lower for pw in predicate_words)
+        if not has_predicate_match:
+            return False
+
     matching_count = sum(1 for w in content_words if w in title_lower)
     if len(content_words) <= 3:
         return matching_count >= min(len(content_words), 2)
@@ -1112,7 +1142,7 @@ def verify_article_on_web(text: str) -> dict:
             
             if check_headline_refutation(query_words, title):
                 debunking_sources.append(s)
-            elif is_headline_semantically_relevant(query_words, title):
+            elif is_headline_semantically_relevant(query_words, title, candidates):
                 relevant_sources.append(s)
 
     # Analyze Web Consensus
@@ -1169,6 +1199,8 @@ def verify_article_on_web(text: str) -> dict:
             summary = "Uncorroborated military attack / warfare claim. If this geopolitical attack had occurred, global news wires (Reuters, AP, BBC, Al Jazeera) would be continuously broadcasting it. Zero credible news sources report any such attack."
         elif any(w in DEATH_TERMS for w in query_words):
             summary = "Uncorroborated death / assassination rumor. If this major event were true, every global news wire would report it. Zero matching news reports confirm this claim."
+        elif any(w in CRIMINAL_ACCUSATION_TERMS for w in query_words):
+            summary = "Uncorroborated criminal allegation. Zero credible news wires, official court filings, or investigative authorities report or corroborate this claim. It circulates without documentary or factual basis."
         else:
             summary = "Uncorroborated sensational claim. If this major event were true, international news wires would report it. Zero matching news reports confirm this claim."
     elif wiki_grounding and wiki_grounding.get("is_grounded"):

@@ -212,7 +212,7 @@ class FakeNewsPredictor:
                         final_explanation = f"Authoritatively grounded in verified world knowledge: {web_info['wikipedia_grounding']['entity']} ({wiki_desc})."
 
                     # Case 4: Corroborated by live news coverage on news wires
-                    elif web_info.get("credible_sources_count", 0) >= 1 or web_info.get("web_verdict") == "CORROBORATED_BY_LIVE_NEWS" or web_info.get("sources_count", 0) >= 1:
+                    elif web_info.get("credible_sources_count", 0) >= 1 or web_info.get("web_verdict") == "CORROBORATED_BY_LIVE_NEWS" or (web_info.get("sources_count", 0) >= 2 and predicted_label == "REAL"):
                         final_prediction = "REAL"
                         final_confidence = round(min(98.2, max(confidence_pct + 42.0, 94.5)), 2)
                         lead_source = web_info["live_sources"][0]["source"] if web_info.get("live_sources") else "Verified News Wires"
