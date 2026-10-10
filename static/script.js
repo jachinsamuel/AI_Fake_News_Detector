@@ -657,8 +657,11 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (web.is_uncorroborated_hoax) {
                 webVerdictBadge.textContent = web.web_verdict === "DISINFORMATION_TROPE_DETECTED" ? "Disinformation Pattern Flagged" : "Uncorroborated Hoax";
                 webVerdictBadge.classList.add("debunked");
-            } else if (web.web_verdict.includes("WIKIPEDIA") || web.web_verdict === "CORROBORATED_BY_LIVE_NEWS") {
+            } else if (web.web_verdict === "CORROBORATED_BY_LIVE_NEWS" || (web.sources_count > 0 && web.web_verdict.includes("NEWS"))) {
                 webVerdictBadge.textContent = "Corroborated by News Outlets";
+                webVerdictBadge.classList.add("corroborated");
+            } else if (web.web_verdict.includes("WIKIPEDIA")) {
+                webVerdictBadge.textContent = "Grounded by World Knowledge";
                 webVerdictBadge.classList.add("corroborated");
             } else if (web.sources_count > 0) {
                 webVerdictBadge.textContent = `${web.sources_count} Live Articles Found`;

@@ -150,6 +150,39 @@ SCIENTIFIC_CONSENSUS_DEBUNKS = [
     ),
 ]
 
+WIDELY_DEBUNKED_VIRAL_HOAXES = [
+    (
+        re.compile(r"\b(?:trump|donald\s+trump)\b.*\b(?:epstein\s+island|little\s+st\.?\s*james)\b|\b(?:epstein\s+island|little\s+st\.?\s*james)\b.*\b(?:trump|donald\s+trump)\b", re.IGNORECASE),
+        "Donald Trump Epstein Island Claim",
+        "Independent fact-checkers (Reuters, Associated Press, PolitiFact) and unsealed court documents confirm there is no evidence or flight record that Donald Trump ever visited Jeffrey Epstein's private island (Little St. James). While Trump flew on Epstein's jet between Florida and New York in the 1990s, Epstein's longtime pilot testified under oath that Trump never traveled to the island."
+    ),
+    (
+        re.compile(r"\b(?:obama|barack\s+obama)\b.*\b(?:epstein\s+island|little\s+st\.?\s*james)\b|\b(?:epstein\s+island|little\s+st\.?\s*james)\b.*\b(?:obama|barack\s+obama)\b", re.IGNORECASE),
+        "Barack Obama Epstein Island Claim",
+        "Refuted viral rumor. Independent fact-checkers and official unsealed flight manifests confirm Barack Obama never visited Jeffrey Epstein's island nor flew on his private aircraft."
+    ),
+    (
+        re.compile(r"\b(?:obama|barack\s+obama)\b.*\b(?:born\s+in\s+kenya|kenyan\s+birth\s+certificate)\b", re.IGNORECASE),
+        "Barack Obama Birther Hoax",
+        "Refuted political conspiracy theory. Official birth records certified by the Hawaii Department of Health definitively confirm Barack Obama was born in Honolulu, Hawaii."
+    ),
+    (
+        re.compile(r"\b(?:pope\s+francis\s+(?:endorses?|endorsed)\s+(?:donald\s+)?trump)\b", re.IGNORECASE),
+        "Pope Francis Trump Endorsement Hoax",
+        "Fabricated election hoax originating from a fictional satirical website. The Vatican and international fact-checkers confirmed Pope Francis made no political endorsements."
+    ),
+    (
+        re.compile(r"\b(?:michelle\s+obama\s+(?:is|was)\s+(?:a\s+man|named\s+michael))\b", re.IGNORECASE),
+        "Michelle Obama Gender Hoax",
+        "Baseless smear and viral social media falsehood repeatedly debunked by PolitiFact, Snopes, and Reuters."
+    ),
+    (
+        re.compile(r"\b(?:elon\s+musk\s+(?:bought|purchased|acquired)\s+(?:google|facebook|apple|meta|microsoft|youtube|amazon))\b", re.IGNORECASE),
+        "Elon Musk Fictional Corporate Acquisition",
+        "False corporate acquisition claim. SEC filings and official announcements confirm Elon Musk has not acquired this company."
+    ),
+]
+
 RE_REFUTATION_PATTERNS = [
     re.compile(r"\b(?:fact[- ]check|factcheck|fact-checking|myth[- ]busting)\b", re.IGNORECASE),
     re.compile(r"\b(?:debunk(?:ed|s|ing)?|hoax|fabricated|untrue|false claim|fake news)\b", re.IGNORECASE),
@@ -431,6 +464,19 @@ def verify_world_gk_claim(text: str) -> dict:
                 "explanation": f"Factually debunked by scientific consensus: {explanation}"
             }
 
+    # 0.1 Check Widely Debunked Viral Hoaxes & Fabricated Claims
+    for pat, claim_name, explanation in WIDELY_DEBUNKED_VIRAL_HOAXES:
+        if pat.search(text_clean):
+            return {
+                "is_gk_claim": True,
+                "verdict": "FAKE",
+                "confidence": 98.8,
+                "office": "Fact-Checked Public Record",
+                "person": claim_name,
+                "actual_incumbent": "Verified Fact-Checking Archives",
+                "explanation": f"Refuted by official records and fact-checkers: {explanation}"
+            }
+
     # 1. Check Political Office Claim: '[Person] is [Office] of [Country]' or '[Office] of [Country] is [Person]'
     m1 = RE_OFFICE_P1.search(text_clean)
     m2 = RE_OFFICE_P2.search(text_clean)
@@ -675,10 +721,20 @@ def query_wikipedia_grounding(entity_candidate: str, full_claim_text: str) -> di
         desc_lower = (description + " " + extract[:300]).lower()
         
         # Check key semantic terms from claim
-        claim_keywords = [w for w in re.sub(r"[^\w\s]", "", claim_lower).split() if len(w) > 3 and w not in entity_candidate.lower()]
+        claim_keywords = [
+            w for w in re.sub(r"[^\w\s]", "", claim_lower).split()
+            if len(w) > 3 and w not in entity_candidate.lower() and w not in COMMON_STOPWORDS
+        ]
         matches = [k for k in claim_keywords if k in desc_lower]
         
-        is_grounded = len(matches) >= 1 or any(term in desc_lower for term in ["prime minister", "president", "telescope", "capital", "discovered", "scientist"])
+        # Grounding requires that Wikipedia actually corroborates the specific claim or relationship asserted
+        if claim_keywords:
+            if len(claim_keywords) <= 2:
+                is_grounded = len(matches) >= 1 and any(m in {"president", "prime minister", "minister", "founder", "author", "scientist", "capital", "telescope", "space", "physicist", "actor", "director", "governor", "ceo", "discovered", "invention"} for m in matches)
+            else:
+                is_grounded = len(matches) >= 2 and (len(matches) / len(claim_keywords) >= 0.5)
+        else:
+            is_grounded = bool(description or extract)
 
         return {
             "entity": title,
