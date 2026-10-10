@@ -193,6 +193,9 @@ RE_REFUTATION_PATTERNS = [
     re.compile(r"\b(?:is not (?:dead|arrested|true|real|stepping down|guilty))\b", re.IGNORECASE),
     re.compile(r"\b(?:not the (?:president|prime minister|ceo|capital|founder))\b", re.IGNORECASE),
     re.compile(r"\b(?:claim that .* is false|warning against fake)\b", re.IGNORECASE),
+    re.compile(r"\b(?:examining|scrutinizing|investigating|evaluating)\s+.*(?:claim|rumor|assertion)\b", re.IGNORECASE),
+    re.compile(r"\b(?:checking claim|claim of .* (?:debunked|refuted|unfounded))\b", re.IGNORECASE),
+    re.compile(r"\b(?:no evidence that|no proof that|did .* really)\b", re.IGNORECASE),
 ]
 
 COMMON_STOPWORDS = {
@@ -398,9 +401,44 @@ CRIMINAL_ACCUSATION_TERMS = {
     "trafficking", "murderer", "murder", "murdered"
 }
 
-CRITICAL_CLAIM_TERMS = DEATH_TERMS.union(ARREST_TERMS).union(CURE_TERMS).union(MILITARY_ATTACK_TERMS).union(CRIMINAL_ACCUSATION_TERMS).union({
-    "resigned", "resigns", "hoax", "alien", "mind control", "5g"
+EXTRAORDINARY_EVENT_TERMS = {
+    "alien", "aliens", "extraterrestrial", "ufo", "ufos",
+    "bankrupt", "bankruptcy", "executed", "execution",
+    "poisoned", "stroke", "coma", "cardiac arrest",
+    "coup", "martial law", "nuclear war", "world war",
+    "secret cure", "miracle cure", "5g", "mind control"
+}
+
+CRITICAL_CLAIM_TERMS = DEATH_TERMS.union(ARREST_TERMS).union(CURE_TERMS).union(MILITARY_ATTACK_TERMS).union(CRIMINAL_ACCUSATION_TERMS).union(EXTRAORDINARY_EVENT_TERMS).union({
+    "resigned", "resigns", "hoax"
 })
+
+COMMON_ACTION_VERBS = {
+    # Movement & visits
+    "went", "visit", "visited", "visiting", "traveled", "travelled", "flew", "arrived", "departed", "escaped", "fled",
+    # Warfare & violence
+    "bombed", "bomb", "bombing", "attacked", "attack", "attacking", "invaded", "invade", "invading", "struck", "strike",
+    "killed", "murdered", "assassinated", "shot", "executed", "died", "dead", "passed away",
+    # Legal & crime
+    "arrested", "jailed", "imprisoned", "detained", "indicted", "convicted", "sentenced", "sued", "charged",
+    "bribed", "stole", "embezzled", "defrauded", "raped", "molested", "abused", "trafficked",
+    # Politics & corporate
+    "resigned", "stepped down", "fired", "appointed", "elected", "sworn in", "bought", "purchased", "acquired",
+    "sold", "merged", "banned", "cancelled", "approved", "endorsed", "vetoed", "declared", "announced", "signed",
+    # Science & discovery
+    "discovered", "found", "invented", "developed", "launched", "created", "cured", "proved", "confirmed"
+}
+
+COPULA_AND_AUX_VERBS = {"is", "was", "are", "were", "has", "have", "had", "been", "became", "becomes"}
+
+KNOWN_PUBLIC_ENTITIES = {
+    "donald trump", "trump", "joe biden", "biden", "narendra modi", "modi", "barack obama", "obama",
+    "elon musk", "musk", "vladimir putin", "putin", "kamala harris", "harris", "xi jinping",
+    "benjamin netanyahu", "netanyahu", "emmanuel macron", "macron", "rishi sunak", "keir starmer",
+    "rahul gandhi", "amit shah", "mark zuckerberg", "zuckerberg", "bill gates", "gates", "jeff bezos", "bezos",
+    "tim cook", "satya nadella", "sundar pichai", "sam altman", "jensen huang", "albert einstein",
+    "nasa", "isro", "who", "united nations", "apple", "google", "microsoft", "tesla", "meta", "openai", "spacex"
+}
 
 CONDOLENCE_TERMS = {
     "condoles", "condoled", "condolence", "condolences", "mourns", "mourned",
@@ -408,6 +446,57 @@ CONDOLENCE_TERMS = {
     "prays for", "pays tribute"
 }
 
+
+def parse_claim_subject_and_predicate(text: str) -> tuple:
+    """
+    Universally separates any news claim into Subject words and Predicate (action/assertion) words.
+    Works across capitalized, lowercase, and mixed-case sentences.
+    """
+    text_clean = text.strip()
+    words = [re.sub(r"[^\w]", "", w).lower() for w in text_clean.split()]
+    words = [w for w in words if w and w not in COMMON_STOPWORDS]
+    
+    if len(words) <= 1:
+        return words, []
+
+    text_lower = text.lower()
+    
+    # 1. Match known multi-word or single-word entities first
+    known_ent_match = None
+    for ent in sorted(KNOWN_PUBLIC_ENTITIES, key=lambda x: -len(x)):
+        if re.search(r"\b" + re.escape(ent) + r"\b", text_lower):
+            known_ent_match = ent.split()
+            break
+            
+    if known_ent_match:
+        subject = [w for w in known_ent_match if w not in COMMON_STOPWORDS]
+        predicate = [w for w in words if w not in subject]
+        if predicate:
+            return subject, predicate
+
+    # 2. Check for dividing verbs or copulas
+    dividing_index = -1
+    raw_tokens = [w.lower() for w in text.split()]
+    for i, tok in enumerate(raw_tokens):
+        clean_tok = re.sub(r"[^\w]", "", tok)
+        if clean_tok in COPULA_AND_AUX_VERBS or clean_tok in COMMON_ACTION_VERBS:
+            dividing_index = i
+            break
+            
+    if dividing_index > 0:
+        subj_raw = [re.sub(r"[^\w]", "", w).lower() for w in raw_tokens[:dividing_index]]
+        pred_raw = [re.sub(r"[^\w]", "", w).lower() for w in raw_tokens[dividing_index:]]
+        subj = [w for w in subj_raw if w and w not in COMMON_STOPWORDS]
+        pred = [w for w in pred_raw if w and w not in COMMON_STOPWORDS]
+        if subj and pred:
+            return subj, pred
+
+    # 3. Fallback: first 1-2 content words are subject, remaining are predicate
+    split_point = 2 if len(words) >= 4 else 1
+    return words[:split_point], words[split_point:]
+
+
+TEMPORAL_QUERY_NOISE = {"yesterday", "today", "tonight", "tomorrow", "breaking", "recently", "hours", "urgent"}
 
 def extract_search_query(text: str, max_words: int = 10) -> str:
     """Extract a concise searchable query from text using precompiled regexes."""
@@ -418,16 +507,25 @@ def extract_search_query(text: str, max_words: int = 10) -> str:
     first_sentence = sentences[0].strip() if sentences else cleaned
     
     query = RE_NON_ALPHANUM.sub(" ", first_sentence)
-    words = [w for w in query.split() if len(w) > 2][:max_words]
+    all_words = [w for w in query.split() if len(w) > 2]
+    filtered_words = [w for w in all_words if w.lower() not in TEMPORAL_QUERY_NOISE]
+    words = (filtered_words if len(filtered_words) >= 2 else all_words)[:max_words]
     return " ".join(words)
 
 
 def extract_potential_entities(text: str) -> list:
-    """Extract capitalized candidate entities for Wikipedia verification."""
+    """Extract candidate entities for Wikipedia verification, including known entities regardless of case."""
     words = text.split()
     entities = []
-    current_entity = []
     
+    text_lower = text.lower()
+    for ent in sorted(KNOWN_PUBLIC_ENTITIES, key=lambda x: -len(x)):
+        if re.search(r"\b" + re.escape(ent) + r"\b", text_lower):
+            ent_title = ent.title()
+            if ent_title not in entities:
+                entities.append(ent_title)
+
+    current_entity = []
     for w in words:
         clean_w = re.sub(r"[^\w]", "", w)
         if clean_w and clean_w[0].isupper() and clean_w.lower() not in {"the", "a", "an", "is", "in", "of", "on", "at", "to", "for"}:
@@ -807,7 +905,7 @@ def check_headline_refutation(query_words: list, title: str) -> bool:
     return matches >= max(1, len(content_words) // 2)
 
 
-def is_headline_semantically_relevant(query_words: list, title: str, entity_candidates: list = None) -> bool:
+def is_headline_semantically_relevant(query_words: list, title: str, entity_candidates: list = None, raw_query_text: str = "") -> bool:
     """
     Ensure a returned news article actually matches the core claim of the query.
     Detects false positives where articles about an entity do not match the specific claim asserted.
@@ -861,31 +959,58 @@ def is_headline_semantically_relevant(query_words: list, title: str, entity_cand
         if not any(cr in title_lower for cr in crim_roots):
             return False
 
-    # 4. Predicate-Aware Semantic Match
+    # 3.6 Bankruptcy / Insolvency Check
+    has_bankruptcy_in_query = any(b in query_words for b in ["bankrupt", "bankruptcy", "insolvent", "insolvency"])
+    if has_bankruptcy_in_query:
+        topic_context = any(w in title_lower for w in ["protection", "protections", "law", "laws", "bill", "reform", "legislation", "policy", "opposing", "opposed", "farm bankruptcy", "student loan"])
+        actual_filing = any(w in title_lower for w in ["files for bankruptcy", "filed for bankruptcy", "declares bankruptcy", "declared bankruptcy", "goes bankrupt", "went bankrupt", "bankruptcy filing", "is bankrupt", "facing bankruptcy"])
+        if topic_context and not actual_filing:
+            return False
+        if not actual_filing:
+            return False
+
+    # 3.7 Corporate Buyout / Acquisition Check
+    has_buyout_in_query = any(b in query_words for b in ["bought", "buys", "buy", "purchased", "purchase", "acquired", "acquire", "acquires", "acquisition", "takeover"])
+    if has_buyout_in_query:
+        actual_acquisition = any(w in title_lower for w in ["buys", "bought", "acquires", "acquired", "acquisition of", "purchase of", "purchases", "takeover of"])
+        if not actual_acquisition:
+            return False
+
+    # 3.8 Resignation / Stepping Down Check
+    has_resignation_in_query = any(r in query_words for r in ["resigned", "resigns", "resignation", "stepped down", "steps down"])
+    if has_resignation_in_query:
+        actual_resignation = any(w in title_lower for w in ["resigns", "resigned", "resignation", "steps down", "stepped down", "quits", "step down"])
+        if not actual_resignation:
+            return False
+
+    # 4. Universal Subject-Predicate Separation & Action Matching
+    raw_text = raw_query_text or " ".join(query_words)
+    subj_tokens, pred_tokens = parse_claim_subject_and_predicate(raw_text)
+    
+    if subj_tokens and pred_tokens:
+        has_subj_match = any(sw in title_lower for sw in subj_tokens)
+        if not has_subj_match:
+            return False
+            
+        pred_action_terms = [pw for pw in pred_tokens if pw in COMMON_ACTION_VERBS or pw in CRITICAL_CLAIM_TERMS]
+        if pred_action_terms:
+            has_action_match = any(at in title_lower for at in pred_action_terms)
+            if not has_action_match:
+                return False
+        else:
+            has_pred_match = any(pw in title_lower for pw in pred_tokens if len(pw) > 2)
+            if not has_pred_match:
+                return False
+
+    # 5. General Semantic Word Overlap
     content_words = [w for w in query_words if len(w) > 2 and w not in COMMON_STOPWORDS]
     if not content_words:
         return True
 
-    # Extract subject tokens vs predicate tokens
-    entity_tokens = set()
-    if entity_candidates:
-        for ent in entity_candidates:
-            for w in ent.lower().split():
-                if len(w) > 2 and w not in COMMON_STOPWORDS:
-                    entity_tokens.add(w)
-
-    predicate_words = [w for w in content_words if w not in entity_tokens]
-    
-    # If claim has an entity AND a non-entity predicate, the headline MUST match at least one predicate root
-    if entity_tokens and predicate_words:
-        has_predicate_match = any(pw in title_lower for pw in predicate_words)
-        if not has_predicate_match:
-            return False
-
     matching_count = sum(1 for w in content_words if w in title_lower)
     if len(content_words) <= 3:
         return matching_count >= min(len(content_words), 2)
-    return matching_count >= max(2, int(len(content_words) * 0.6))
+    return matching_count >= max(2, int(len(content_words) * 0.5))
 
 
 def query_google_fact_check(query: str) -> list:
@@ -1124,7 +1249,7 @@ def verify_article_on_web(text: str) -> dict:
             "description": e["description"],
             "extract_snippet": e["extract_snippet"],
             "url": e["url"],
-            "is_grounded": True,
+            "is_grounded": e.get("is_grounded", False),
             "matching_keywords": e.get("matching_keywords", [])
         }
 
@@ -1140,9 +1265,20 @@ def verify_article_on_web(text: str) -> dict:
             cred = evaluate_domain_credibility(s.get("source", ""), s.get("url", ""))
             s["credibility"] = cred
             
+            # If the source is an IFCN-certified or recognized fact-checker (FactCheck.org, Snopes, PolitiFact, etc.)
+            # it NEVER acts as a primary news wire confirming that an event occurred!
+            is_fc_domain = (
+                cred.get("tier") == "Tier 3: Certified Fact-Checker" or
+                "fact-checker" in cred.get("tier", "").lower() or
+                any(fc in (s.get("source", "") + " " + s.get("url", "")).lower() for fc in ["factcheck", "snopes", "politifact", "boomlive", "vishvas", "fullfact"])
+            )
+            if is_fc_domain:
+                debunking_sources.append(s)
+                continue
+
             if check_headline_refutation(query_words, title):
                 debunking_sources.append(s)
-            elif is_headline_semantically_relevant(query_words, title, candidates):
+            elif is_headline_semantically_relevant(query_words, title, candidates, raw_query_text=text):
                 relevant_sources.append(s)
 
     # Analyze Web Consensus
@@ -1201,6 +1337,8 @@ def verify_article_on_web(text: str) -> dict:
             summary = "Uncorroborated death / assassination rumor. If this major event were true, every global news wire would report it. Zero matching news reports confirm this claim."
         elif any(w in CRIMINAL_ACCUSATION_TERMS for w in query_words):
             summary = "Uncorroborated criminal allegation. Zero credible news wires, official court filings, or investigative authorities report or corroborate this claim. It circulates without documentary or factual basis."
+        elif any(w in EXTRAORDINARY_EVENT_TERMS for w in query_words):
+            summary = "Uncorroborated extraordinary event claim. High-impact breaking news of this nature receives immediate worldwide coverage on international news wires. Zero credible sources report any such event."
         else:
             summary = "Uncorroborated sensational claim. If this major event were true, international news wires would report it. Zero matching news reports confirm this claim."
     elif wiki_grounding and wiki_grounding.get("is_grounded"):

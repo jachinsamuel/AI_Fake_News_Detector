@@ -221,17 +221,22 @@ class FakeNewsPredictor:
                         else:
                             final_explanation = f"Corroborated by live news reporting from {lead_source}."
 
-                    # Case 6: Short text without live web reporting
-                    elif word_count <= 25 and web_info.get("sources_count", 0) == 0 and not web_info.get("fact_checks"):
+                    # Case 6: Claims with zero corroborating live web reporting
+                    elif web_info.get("sources_count", 0) == 0 and not web_info.get("fact_checks"):
                         if predicted_label == "FAKE":
                             if web_info.get("grounded_entities"):
                                 ent = web_info["grounded_entities"][0]["entity"]
                                 final_explanation = (
                                     f"Uncorroborated claim regarding {ent}. "
-                                    f"While {ent} is a recognized public figure, zero credible news wires, official records, or fact-checkers corroborate this claim. "
+                                    f"While {ent} is a recognized public figure or entity, zero credible news wires, official records, or fact-checkers report or corroborate this claim. "
                                     "Journalistic and stylistic markers align with unverified rumors or misinformation."
                                 )
-                        elif predicted_label == "REAL" and confidence_pct < 65:
+                            else:
+                                final_explanation = (
+                                    "Uncorroborated claim. Zero matching news reports were found across global news feeds or fact-checking databases. "
+                                    "Stylistic and linguistic markers align with unverified rumors or misinformation."
+                                )
+                        elif predicted_label == "REAL" and (confidence_pct < 70 or word_count <= 25):
                             final_confidence = round(confidence_pct, 2)
                             final_explanation = "Statistical text pattern matches real news syntax, but no active real-time news coverage was found on the live web."
             except Exception as e:
