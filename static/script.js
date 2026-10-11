@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Results Elements
     const resultCard = document.getElementById("result-card");
+    const resultCardWrap = document.getElementById("result-card-wrap");
     const verdictTag = document.getElementById("verdict-tag");
     const statModel = document.getElementById("stat-model");
     const confidenceVal = document.getElementById("confidence-val");
@@ -475,6 +476,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateTextStats();
         hideError();
         resultCard.classList.add("hidden");
+        if (resultCardWrap) resultCardWrap.classList.add("hidden");
         newsInput.focus();
     });
 
@@ -740,7 +742,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Reveal card
         resultCard.classList.remove("hidden");
-        resultCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        if (resultCardWrap) resultCardWrap.classList.remove("hidden");
+        (resultCardWrap || resultCard).scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
     // 7. Export Formal Fact-Check PDF Report

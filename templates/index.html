@@ -11,7 +11,7 @@
     <link rel="dns-prefetch" href="https://news.google.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=11.0">
 </head>
 <body>
     <div class="site-wrapper">
@@ -50,8 +50,10 @@
                 </div>
             </div>
 
-            <!-- Input Card -->
-            <div class="card input-card">
+            <!-- Input Card (Torn Paper Note) -->
+            <div class="card-torn-shadow-wrap">
+                <div class="card-tape"></div>
+                <div class="card input-card">
                 <!-- Text Input Panel -->
                 <div id="panel-text" class="input-panel">
                     <div class="card-header">
@@ -185,8 +187,11 @@
                     <span id="error-message"></span>
                 </div>
             </div>
+        </div>
 
-            <!-- Result Card -->
+        <!-- Result Card (Torn Paper Note) -->
+        <div id="result-card-wrap" class="card-torn-shadow-wrap hidden">
+            <div class="card-tape card-tape-result"></div>
             <div id="result-card" class="card result-card hidden" aria-live="polite">
                 <!-- Result Hero Banner (Full-Width Summary) -->
                 <div class="result-hero-banner">
@@ -300,11 +305,12 @@
                     <span id="telemetry-cache" class="hidden">Served from instant cache</span>
                 </div>
             </div>
+        </div>
         </main>
     </div>
 
     <!-- Tesseract.js OCR Engine (Wasm Client-Side) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}?v=11.0"></script>
 </body>
 </html>

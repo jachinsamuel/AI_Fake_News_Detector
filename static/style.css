@@ -55,9 +55,12 @@
 }
 
 body {
-    background-color: var(--bg-app);
+    background-color: #EDE2D0;
     background-image: 
-        radial-gradient(circle at 50% 0%, #FAF8F4 0%, #F5F2EB 50%, #ECE8DE 100%);
+        radial-gradient(ellipse at 50% 25%, rgba(255, 255, 255, 0.45) 0%, rgba(225, 212, 192, 0.35) 100%),
+        url('paper-texture.svg');
+    background-repeat: repeat;
+    background-size: auto, 300px 300px;
     background-attachment: fixed;
     color: var(--text-main);
     font-family: var(--font-sans);
@@ -69,7 +72,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Authentic Tactile Paper Grain Overlay */
+/* Subtle newspaper/archival watermark and margin guideline */
 body::before {
     content: "";
     position: fixed;
@@ -78,10 +81,12 @@ body::before {
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    z-index: 9999;
-    opacity: 0.045;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paperGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperGrain)'/%3E%3C/svg%3E");
+    z-index: 0;
+    opacity: 0.07;
+    background-image: 
+        linear-gradient(90deg, rgba(28, 25, 23, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(28, 25, 23, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
 }
 
 /* Broadsheet Editorial Top Rule */
@@ -91,9 +96,9 @@ body::after {
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
+    height: 4px;
     background: linear-gradient(90deg, #1C1917 0%, #57534E 50%, #1C1917 100%);
-    opacity: 0.85;
+    opacity: 0.9;
     z-index: 1000;
 }
 
@@ -295,19 +300,94 @@ body::after {
 }
 
 /* ==========================================================================
-   Cards & Nested Architecture
+   Torn Paper Card Architecture & Shadows
    ========================================================================== */
+.card-torn-shadow-wrap {
+    position: relative;
+    margin-top: 40px;
+    margin-bottom: 50px;
+    filter: 
+        drop-shadow(0 2px 4px rgba(45, 34, 20, 0.12))
+        drop-shadow(0 10px 22px rgba(45, 34, 20, 0.15))
+        drop-shadow(0 24px 44px rgba(45, 34, 20, 0.09));
+    transition: filter 0.25s ease;
+}
+
+.card-torn-shadow-wrap.hidden {
+    display: none !important;
+}
+
+/* Authentic Frosted Masking / Washi Tape Accent */
+.card-tape {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-1.5deg);
+    width: 140px;
+    height: 32px;
+    background: rgba(246, 238, 220, 0.85);
+    backdrop-filter: blur(2px);
+    border-left: 2px dashed rgba(160, 138, 105, 0.55);
+    border-right: 2px dashed rgba(160, 138, 105, 0.55);
+    box-shadow: 
+        0 1px 4px rgba(45, 34, 20, 0.18),
+        inset 0 1px 1px rgba(255, 255, 255, 0.7);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.card-tape-result {
+    transform: translateX(-50%) rotate(1.2deg);
+}
+
 .card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    background-color: #FDFAF5;
+    background-image: 
+        radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.6) 0%, transparent 60%),
+        url('card-paper-texture.svg');
+    background-repeat: repeat;
+    background-size: auto, 300px 300px;
+    border: none;
+    border-left: 1px solid rgba(215, 202, 185, 0.6);
+    border-right: 1px solid rgba(215, 202, 185, 0.6);
+    border-radius: 0 !important;
+    padding: 38px 34px 34px 34px;
+    margin: 0;
+    clip-path: polygon(
+        0.0% 16px, 2.0% 19px, 4.0% 8px, 6.0% 16px, 8.0% 6px, 10.0% 17px, 12.0% 5px, 14.0% 15px, 16.0% 7px, 18.0% 19px, 20.0% 3px, 22.0% 19px, 24.0% 3px, 26.0% 17px, 28.0% 5px, 30.0% 20px, 32.0% 8px, 34.0% 16px, 36.0% 4px, 38.0% 18px, 40.0% 3px, 42.0% 17px, 44.0% 3px, 46.0% 16px, 48.0% 3px, 50.0% 18px, 52.0% 8px, 54.0% 19px, 56.0% 4px, 58.0% 16px, 60.0% 5px, 62.0% 21px, 64.0% 4px, 66.0% 16px, 68.0% 7px, 70.0% 21px, 72.0% 5px, 74.0% 18px, 76.0% 3px, 78.0% 15px, 80.0% 5px, 82.0% 18px, 84.0% 4px, 86.0% 16px, 88.0% 3px, 90.0% 20px, 92.0% 8px, 94.0% 19px, 96.0% 7px, 98.0% 17px, 100.0% 14px,
+        100.0% calc(100% - 15px), 98.0% calc(100% - 21px), 96.0% calc(100% - 9px), 94.0% calc(100% - 18px), 92.0% calc(100% - 6px), 90.0% calc(100% - 22px), 88.0% calc(100% - 6px), 86.0% calc(100% - 17px), 84.0% calc(100% - 6px), 82.0% calc(100% - 16px), 80.0% calc(100% - 6px), 78.0% calc(100% - 21px), 76.0% calc(100% - 8px), 74.0% calc(100% - 19px), 72.0% calc(100% - 3px), 70.0% calc(100% - 22px), 68.0% calc(100% - 6px), 66.0% calc(100% - 17px), 64.0% calc(100% - 7px), 62.0% calc(100% - 16px), 60.0% calc(100% - 5px), 58.0% calc(100% - 22px), 56.0% calc(100% - 3px), 54.0% calc(100% - 18px), 52.0% calc(100% - 8px), 50.0% calc(100% - 18px), 48.0% calc(100% - 3px), 46.0% calc(100% - 18px), 44.0% calc(100% - 7px), 42.0% calc(100% - 22px), 40.0% calc(100% - 4px), 38.0% calc(100% - 16px), 36.0% calc(100% - 6px), 34.0% calc(100% - 17px), 32.0% calc(100% - 5px), 30.0% calc(100% - 16px), 28.0% calc(100% - 9px), 26.0% calc(100% - 17px), 24.0% calc(100% - 6px), 22.0% calc(100% - 21px), 20.0% calc(100% - 8px), 18.0% calc(100% - 22px), 16.0% calc(100% - 5px), 14.0% calc(100% - 21px), 12.0% calc(100% - 7px), 10.0% calc(100% - 19px), 8.0% calc(100% - 4px), 6.0% calc(100% - 19px), 4.0% calc(100% - 9px), 2.0% calc(100% - 20px), 0.0% calc(100% - 16px)
+    );
+}
+
+/* Exposed white pulp deckle fringe at top tear */
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 26px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 238, 222, 0.55) 60%, transparent 100%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Deckle pulp shading along bottom tear */
+.card::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 26px;
+    background: linear-gradient(0deg, rgba(215, 200, 178, 0.55) 0%, rgba(240, 230, 215, 0.2) 60%, transparent 100%);
+    pointer-events: none;
+    z-index: 2;
 }
 
 .input-card {
-    padding: 24px;
-    margin-bottom: 28px;
+    padding: 38px 34px 34px 34px;
 }
 
 .card-header {
@@ -423,14 +503,14 @@ body::after {
 
 textarea {
     width: 100%;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
+    border: 1px solid rgba(215, 202, 185, 0.8);
+    border-radius: 6px;
     padding: 16px;
     font-family: var(--font-sans);
     font-size: 0.94rem;
     line-height: 1.6;
     color: var(--text-main);
-    background-color: var(--bg-surface);
+    background-color: rgba(255, 255, 255, 0.7);
     outline: none;
     resize: vertical;
     min-height: 155px;
@@ -439,8 +519,8 @@ textarea {
 
 textarea:focus {
     background-color: #FFFFFF;
-    border-color: var(--border-focus);
-    box-shadow: 0 0 0 3px rgba(28, 25, 23, 0.08);
+    border-color: #2D251E;
+    box-shadow: 0 0 0 3px rgba(45, 37, 30, 0.08);
 }
 
 textarea::placeholder {
@@ -822,11 +902,13 @@ kbd {
    Result Card & Bento Grid Architecture
    ========================================================================== */
 .result-card {
-    padding: 24px;
-    margin-bottom: 36px;
-    border-radius: var(--radius-xl);
+    padding: 38px 34px 34px 34px;
+    margin: 0;
+    border-radius: 0 !important;
+    border: none;
+    border-left: 1px solid rgba(215, 202, 185, 0.6);
+    border-right: 1px solid rgba(215, 202, 185, 0.6);
     animation: resultFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    border: 1px solid var(--border-color);
 }
 
 @keyframes resultFadeIn {
@@ -835,20 +917,18 @@ kbd {
 }
 
 .result-card.is-real {
-    border-top: 4px solid var(--real-fill);
-    box-shadow: 0 8px 30px -4px var(--real-glow), var(--shadow-card);
+    border-left: 4px solid var(--real-fill);
 }
 
 .result-card.is-fake {
-    border-top: 4px solid var(--fake-fill);
-    box-shadow: 0 8px 30px -4px var(--fake-glow), var(--shadow-card);
+    border-left: 4px solid var(--fake-fill);
 }
 
 /* 1. Full-Width Hero Summary Banner */
 .result-hero-banner {
     background-color: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    border: 1px dashed var(--border-color);
+    border-radius: 4px;
     padding: 20px 22px;
     margin-bottom: 20px;
 }
