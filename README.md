@@ -68,13 +68,15 @@ Traditional fake news classifiers rely solely on stylistic patterns in text and 
 * **Zero-Key Fallback:** Works immediately out of the box with zero required API keys using Google News RSS and Wikipedia REST feeds.
 * **Wikipedia Encyclopedic Grounding:** Automatically extracts recognized entities (political figures, organizations, nations) and pulls summaries from the official Wikipedia API.
 
-### 4. Anti-False-Positive Warfare & Hoax Filter
+### 4. Anti-False-Positive Warfare, Sports & Officeholder Filter
 * **Predicate-Action Validation:** Strictly matches claimed actions (e.g., attacks, bombings, airstrikes) against retrieved articles to prevent false correlations with unrelated diplomatic summits or peace talks.
+* **Sports & Officeholder Knowledge Grounding:** Built-in authoritative verification for prominent political officeholders and major sports championships (World Cups, IPL, Euros) with temporal year consistency checks to eliminate false corroboration from unrelated future or retrospective articles.
 * **Uncorroborated Critical Claim Detection:** High-stakes geopolitical breaking claims (e.g., assassinations, war declarations, military strikes) that have zero coverage across global news wires (Reuters, AP, BBC, Al Jazeera) are identified as fabricated.
 * **Source Trust Scoring:** Automatically evaluates live sources against an internal catalog of 130+ ranked news domains.
 
-### 5. Explainable AI (XAI) & Instant Caching
+### 5. Explainable AI (XAI), Forensic Stylometry & Instant Caching
 * **Linguistic Driver Tags:** Displays the exact vocabulary signals driving the model's classification.
+* **Forensic Stylometry Profiling:** Analyzes sensationalism density, punctuation dramatism, attribution scoring, and quote density to quantify clickbait metrics.
 * **Two-Tier Caching:** Sub-millisecond (`0.05ms`) response times for repeated queries via client-side storage and persistent disk cache (`data/cache_store.json`).
 * **1-Click PDF Verification Export:** Generates an official, print-ready Fact-Check Verification Report complete with a unique Report ID, timestamp, and citation list.
 
@@ -144,13 +146,24 @@ python data/download_or_prepare.py
 python src/train.py
 ```
 
-### 5. Launch the Application
+### 5. Launch the Application Locally
 
 ```bash
 python app.py
 ```
 
 Open **`http://localhost:5000`** in your browser.
+
+### 6. Production Deployment (Render)
+
+This repository includes a production [`Procfile`](Procfile) configured with `gunicorn app:app`. To deploy on [Render](https://render.com):
+
+1. Create a new **Web Service** on Render and connect this repository.
+2. Configure settings:
+   * **Environment:** `Python 3`
+   * **Build Command:** `pip install -r requirements.txt`
+   * **Start Command:** `gunicorn app:app`
+3. Click **Deploy**. Render automatically manages SSL and provides a public HTTPS address.
 
 ---
 
@@ -253,6 +266,7 @@ FakeNews/
 ├── .env.example              # Template environment variables
 ├── .gitignore                # Git exclusions (credentials, caches, virtualenvs)
 ├── app.py                    # Flask application server & REST endpoints
+├── Procfile                  # Production WSGI server entrypoint (Gunicorn)
 ├── README.md                 # Project documentation
 ├── requirements.txt          # Python dependencies
 ├── data/

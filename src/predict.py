@@ -267,6 +267,53 @@ class FakeNewsPredictor:
         if web_info and web_info.get("average_domain_trust", 0) >= 90 and final_prediction == "REAL":
             final_confidence = round(min(99.0, max(final_confidence, 96.0)), 2)
 
+        # 6.6 Extract Verified Ground Truth / Fact Correction if claim is false
+        fact_correction = None
+        if final_prediction == "FAKE" and web_info:
+            gk = web_info.get("gk_info")
+            if gk and gk.get("verdict") == "FAKE":
+                actual = gk.get("actual_incumbent")
+                office = gk.get("office")
+                expl = gk.get("explanation", "")
+                if actual and office:
+                    if any(w in office.lower() for w in ("world cup", "championship", "cup", "trophy", "league")):
+                        fact_correction = {
+                            "category": "Sports Championship Record",
+                            "correction_text": expl,
+                            "verified_fact": f"{actual} won the {office}.",
+                            "source": "Official Historical Tournament Records"
+                        }
+                    else:
+                        fact_correction = {
+                            "category": "Official Leadership Record",
+                            "correction_text": f"The official {office} is {actual}.",
+                            "verified_fact": f"{actual} is the official {office}.",
+                            "source": "Verified Government & Public Records"
+                        }
+                elif expl:
+                    fact_correction = {
+                        "category": "World Knowledge",
+                        "correction_text": expl,
+                        "verified_fact": expl,
+                        "source": "Verified Encyclopedic Knowledge Base"
+                    }
+            elif web_info.get("fact_checks"):
+                fc = web_info["fact_checks"][0]
+                fact_correction = {
+                    "category": "Independent Fact-Check Investigation",
+                    "correction_text": f"Rated '{fc.get('rating')}' by {fc.get('publisher')}. Independent investigation officially refuted this claim.",
+                    "verified_fact": f"Refuted by {fc.get('publisher')}: '{fc.get('rating')}'",
+                    "source": fc.get("publisher", "Independent Fact-Checker"),
+                    "url": fc.get("url")
+                }
+            elif web_info.get("web_summary") and any(w in web_info.get("web_summary", "").lower() for w in ("defeated", "won the", "official", "is not the")):
+                fact_correction = {
+                    "category": "News & Historical Verification",
+                    "correction_text": web_info.get("web_summary"),
+                    "verified_fact": web_info.get("web_summary"),
+                    "source": "Verified Global News Wires"
+                }
+
         elapsed_ms = round((time.time() - t0) * 1000, 2)
         
         result_payload = {
@@ -277,6 +324,7 @@ class FakeNewsPredictor:
             "important_features": xai_info["important_features"],
             "feature_details": xai_info["feature_details"],
             "explanation": final_explanation,
+            "fact_correction": fact_correction,
             "disclaimer": xai_info["disclaimer"],
             "stylometry": stylometry_info,
             "web_verification": web_info,

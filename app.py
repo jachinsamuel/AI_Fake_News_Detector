@@ -145,6 +145,7 @@ def predict():
             "important_features": result["important_features"],
             "feature_details": result["feature_details"],
             "explanation": result["explanation"],
+            "fact_correction": result.get("fact_correction"),
             "disclaimer": result["disclaimer"],
             "stylometry": result.get("stylometry"),
             "web_verification": result.get("web_verification"),

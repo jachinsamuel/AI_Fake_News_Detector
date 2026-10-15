@@ -477,6 +477,8 @@ document.addEventListener("DOMContentLoaded", () => {
         hideError();
         resultCard.classList.add("hidden");
         if (resultCardWrap) resultCardWrap.classList.add("hidden");
+        const tb = document.getElementById("truth-correction-box");
+        if (tb) tb.classList.add("hidden");
         newsInput.focus();
     });
 
@@ -591,6 +593,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Explanation text
         explanationText.textContent = data.explanation;
+
+        // Verified Truth & Fact Correction Banner (Shown when true fact is known for false claims)
+        const truthBox = document.getElementById("truth-correction-box");
+        const truthStatement = document.getElementById("truth-statement");
+        const truthSourceMeta = document.getElementById("truth-source-meta");
+
+        if (truthBox && truthStatement) {
+            const corr = data.fact_correction;
+            if (corr && !isReal) {
+                truthBox.classList.remove("hidden");
+                truthStatement.textContent = corr.correction_text || corr.verified_fact;
+                if (truthSourceMeta) {
+                    truthSourceMeta.textContent = corr.source ? `Source: ${corr.source}` : "Verified Ground Truth";
+                }
+            } else {
+                truthBox.classList.add("hidden");
+            }
+        }
 
         // Wikipedia Grounding & Multi-Entity Grounding
         const web = data.web_verification;

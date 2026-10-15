@@ -215,6 +215,18 @@
                     <div class="explanation-box">
                         <p id="explanation-text"></p>
                     </div>
+
+                    <!-- Verified Truth / Fact Correction Box (Shown when a fake claim has known true facts) -->
+                    <div id="truth-correction-box" class="truth-correction-box hidden">
+                        <div class="truth-badge-row">
+                            <span class="truth-badge">VERIFIED GROUND TRUTH</span>
+                            <span class="truth-source-meta" id="truth-source-meta">Official Records</span>
+                        </div>
+                        <div class="truth-content">
+                            <strong class="truth-heading">What is actually true:</strong>
+                            <p class="truth-statement" id="truth-statement"></p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 2-Column Bento Grid for Deep Forensic & Grounding Analysis -->
@@ -311,6 +323,6 @@
 
     <!-- Tesseract.js OCR Engine (Wasm Client-Side) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="{{ url_for('static', filename='script.js') }}?v=13.0"></script>
+    <script src="{{ url_for('static', filename='script.js') }}?v=14.0"></script>
 </body>
 </html>
