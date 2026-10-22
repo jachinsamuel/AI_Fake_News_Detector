@@ -13,6 +13,7 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 import json
 import time
+import difflib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from requests.adapters import HTTPAdapter
@@ -751,7 +752,73 @@ def parse_claim_subject_and_predicate(text: str) -> tuple:
     return words[:split_point], words[split_point:]
 
 
+# Geographic transliteration & common variant dictionary for regional names
+GEO_ALIASES = {
+    "kanyakumari": {"kanniyakumari", "kanyakumari"},
+    "kanniyakumari": {"kanyakumari", "kanniyakumari"},
+    "bengaluru": {"bangalore", "bengaluru"},
+    "bangalore": {"bengaluru", "bangalore"},
+    "thoothukudi": {"tuticorin", "thoothukudi"},
+    "tuticorin": {"thoothukudi", "tuticorin"},
+    "chennai": {"madras", "chennai"},
+    "madras": {"chennai", "madras"},
+    "mumbai": {"bombay", "mumbai"},
+    "bombay": {"mumbai", "bombay"},
+    "kolkata": {"calcutta", "kolkata"},
+    "calcutta": {"kolkata", "calcutta"},
+    "puducherry": {"pondicherry", "puducherry"},
+    "pondicherry": {"puducherry", "pondicherry"},
+    "tirunelveli": {"nellai", "tirunelveli"},
+    "nellai": {"tirunelveli", "nellai"},
+    "kochi": {"cochin", "kochi"},
+    "cochin": {"kochi", "cochin"},
+    "thiruvananthapuram": {"trivandrum", "thiruvananthapuram"},
+    "trivandrum": {"thiruvananthapuram", "trivandrum"},
+    "visakhapatnam": {"vizag", "visakhapatnam"},
+    "vizag": {"visakhapatnam", "vizag"},
+    "gurugram": {"gurgaon", "gurugram"},
+    "gurgaon": {"gurugram", "gurgaon"},
+}
+
+# Institutional closure & holiday synonyms
+CLOSURE_SYNONYMS = {
+    "holiday": {"shut", "closed", "closure", "leave", "holiday", "holidays"},
+    "holidays": {"shut", "closed", "closure", "leave", "holiday", "holidays"},
+    "shut": {"holiday", "holidays", "closed", "closure", "shut"},
+    "closed": {"holiday", "holidays", "shut", "closure", "closed"},
+    "closure": {"holiday", "holidays", "shut", "closed", "closure"},
+    "leave": {"holiday", "holidays", "shut", "closed", "leave"},
+}
+
+# Administrative and procedural terms that dilute search engine retrieval when queries are long
+PROCEDURAL_QUERY_NOISE = {
+    "collector", "district", "collectorate", "declares", "declared", "declaring",
+    "announces", "announced", "announcing", "orders", "ordered", "ordering",
+    "due", "owing", "amidst", "amid", "following", "says", "said", "states", "stated"
+}
+
 TEMPORAL_QUERY_NOISE = {"yesterday", "today", "tonight", "tomorrow", "breaking", "recently", "hours", "urgent"}
+
+def _token_in_text(token: str, text_lower: str) -> bool:
+    """Robust token matching supporting exact substring, geo-aliases, synonyms, and string similarity."""
+    if not token or not text_lower:
+        return False
+    tok = token.lower().strip()
+    if tok in text_lower:
+        return True
+    aliases = GEO_ALIASES.get(tok)
+    if aliases and any(a in text_lower for a in aliases):
+        return True
+    synonyms = CLOSURE_SYNONYMS.get(tok)
+    if synonyms and any(s in text_lower for s in synonyms):
+        return True
+    if len(tok) >= 6:
+        words = re.findall(r'[a-z]{5,}', text_lower)
+        for w in words:
+            if abs(len(w) - len(tok)) <= 2:
+                if difflib.SequenceMatcher(None, tok, w).ratio() >= 0.82:
+                    return True
+    return False
 
 def extract_search_query(text: str, max_words: int = 10) -> str:
     """Extract a concise searchable query from text using precompiled regexes."""
@@ -767,6 +834,13 @@ def extract_search_query(text: str, max_words: int = 10) -> str:
     query = RE_NON_ALPHANUM.sub(" ", first_sentence)
     all_words = [w for w in query.split() if len(w) > 2 or (len(w) >= 1 and w.isupper())]
     filtered_words = [w for w in all_words if w.lower() not in TEMPORAL_QUERY_NOISE]
+
+    # If the query is relatively long, prune procedural/administrative noise terms to prevent search dilution
+    if len(filtered_words) > 4:
+        content_words = [w for w in filtered_words if w.lower() not in PROCEDURAL_QUERY_NOISE]
+        if len(content_words) >= 3:
+            filtered_words = content_words
+
     words = (filtered_words if len(filtered_words) >= 2 else all_words)[:max_words]
     return " ".join(words)
 
@@ -1253,7 +1327,7 @@ def check_headline_refutation(query_words: list, title: str) -> bool:
     if not content_words:
         return True
     
-    matches = sum(1 for w in content_words if w in title_lower)
+    matches = sum(1 for w in content_words if _token_in_text(w, title_lower))
     return matches >= max(1, len(content_words) // 2)
 
 
@@ -1306,7 +1380,7 @@ def is_headline_semantically_relevant(query_words: list, title: str, entity_cand
     if has_arrest_in_query:
         subj_words = [w for w in query_words if w not in ARREST_TERMS and len(w) > 2]
         if subj_words:
-            has_subj = any(w in title_lower for w in subj_words)
+            has_subj = any(_token_in_text(w, title_lower) for w in subj_words)
             has_arr = any(a in title_lower for a in ARREST_TERMS)
             return has_subj and has_arr
 
@@ -1357,17 +1431,17 @@ def is_headline_semantically_relevant(query_words: list, title: str, entity_cand
     subj_tokens, pred_tokens = parse_claim_subject_and_predicate(raw_text)
     
     if subj_tokens and pred_tokens:
-        has_subj_match = any(sw in title_lower for sw in subj_tokens)
+        has_subj_match = any(_token_in_text(sw, title_lower) for sw in subj_tokens)
         if not has_subj_match:
             return False
             
         pred_action_terms = [pw for pw in pred_tokens if pw in COMMON_ACTION_VERBS or pw in CRITICAL_CLAIM_TERMS]
         if pred_action_terms:
-            has_action_match = any(at in title_lower for at in pred_action_terms)
+            has_action_match = any(_token_in_text(at, title_lower) for at in pred_action_terms)
             if not has_action_match:
                 return False
         else:
-            has_pred_match = any(pw in title_lower for pw in pred_tokens if len(pw) > 2)
+            has_pred_match = any(_token_in_text(pw, title_lower) for pw in pred_tokens if len(pw) > 2)
             if not has_pred_match:
                 return False
 
@@ -1376,7 +1450,7 @@ def is_headline_semantically_relevant(query_words: list, title: str, entity_cand
     if not content_words:
         return True
 
-    matching_count = sum(1 for w in content_words if w in title_lower)
+    matching_count = sum(1 for w in content_words if _token_in_text(w, title_lower))
     if len(content_words) <= 3:
         return matching_count >= min(len(content_words), 2)
     return matching_count >= max(2, int(len(content_words) * 0.5))
@@ -1622,6 +1696,26 @@ def verify_article_on_web(text: str) -> dict:
             "is_grounded": e.get("is_grounded", False),
             "matching_keywords": e.get("matching_keywords", [])
         }
+
+    # Fallback search if primary query returned zero raw sources
+    if not raw_sources and len(query_words) > 2:
+        try:
+            fallback_query = query
+            for k, aliases in GEO_ALIASES.items():
+                if k in query.lower():
+                    alt = next((a for a in aliases if a != k), None)
+                    if alt:
+                        fallback_query = re.sub(r'\b' + re.escape(k) + r'\b', alt, query, flags=re.IGNORECASE)
+                        break
+            if fallback_query != query:
+                raw_sources.extend(query_google_news_rss(fallback_query))
+            
+            if not raw_sources:
+                core_words = [w for w in query.split() if w.lower() not in COMMON_STOPWORDS and w.lower() not in PROCEDURAL_QUERY_NOISE][:4]
+                if len(core_words) >= 2 and " ".join(core_words) != query:
+                    raw_sources.extend(query_google_news_rss(" ".join(core_words)))
+        except Exception:
+            pass
 
     # Filter semantically relevant headlines vs debunking refutations
     relevant_sources = []
