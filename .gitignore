@@ -60,3 +60,8 @@ desktop.ini
 data/raw_*.csv
 data/raw_news.csv
 data/*.zip
+
+# Presentation & temporary assets
+*.pptx
+slides_assets/
+
