@@ -141,15 +141,15 @@ KNOWN_LEADERS = {
 # Verified ground truth for prominent political offices to prevent Wikipedia vandalism or disambiguation artifacts
 KNOWN_OFFICEHOLDERS = {
     # Indian State Chief Ministers
-    ("chief minister", "tamil nadu"): "C. Joseph Vijay",
+    ("chief minister", "tamil nadu"): "M. K. Stalin",
     ("chief minister", "kerala"): "Pinarayi Vijayan",
     ("chief minister", "karnataka"): "Siddaramaiah",
     ("chief minister", "andhra pradesh"): "N. Chandrababu Naidu",
     ("chief minister", "telangana"): "A. Revanth Reddy",
-    ("chief minister", "maharashtra"): "Devendra Fadnavis",
+    ("chief minister", "maharashtra"): "Eknath Shinde",
     ("chief minister", "uttar pradesh"): "Yogi Adityanath",
     ("chief minister", "west bengal"): "Mamata Banerjee",
-    ("chief minister", "delhi"): "Rekha Gupta",
+    ("chief minister", "delhi"): "Atishi",
     ("chief minister", "bihar"): "Nitish Kumar",
     ("chief minister", "gujarat"): "Bhupendra Patel",
     ("chief minister", "rajasthan"): "Bhajan Lal Sharma",
