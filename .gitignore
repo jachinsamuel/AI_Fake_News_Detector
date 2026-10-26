@@ -64,4 +64,6 @@ data/*.zip
 # Presentation & temporary assets
 *.pptx
 slides_assets/
+scripts/
+
 
