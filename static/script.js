@@ -565,7 +565,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Verdict & Model
         verdictTag.textContent = isReal ? "REAL NEWS" : "FAKE NEWS";
-        statModel.textContent = data.model || "Ensemble Classifier";
+        if (statModel) {
+            statModel.textContent = data.model || "Ensemble Classifier";
+        }
 
         // Confidence
         const confPct = Math.round(data.confidence * 10) / 10;
