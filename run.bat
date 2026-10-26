@@ -3,7 +3,7 @@ title AI Fake News Detector
 cd /d "%~dp0"
 
 echo ===================================================
-echo       AI Fake News Detector & Verifier
+echo       AI Fake News Detector and Verifier
 echo ===================================================
 echo.
 
